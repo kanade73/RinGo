@@ -8,7 +8,6 @@ let package = Package(
     ],
     products: [
         .library(name: "RinGoCore", targets: ["RinGoCore"]),
-        .library(name: "RinGoMLX", targets: ["RinGoMLX"]),
         .library(name: "RinGoModel", targets: ["RinGoModel"]),
         .library(name: "RinGoTrain", targets: ["RinGoTrain"]),
         .library(name: "RinGoEngine", targets: ["RinGoEngine"]),
@@ -30,14 +29,6 @@ let package = Package(
                 .product(name: "MLX", package: "mlx-swift"),
                 .product(name: "MLXNN", package: "mlx-swift"),
                 .product(name: "MLXFast", package: "mlx-swift"),
-            ]
-        ),
-        .target(
-            name: "RinGoMLX",
-            dependencies: [
-                .product(name: "MLX", package: "mlx-swift"),
-                .product(name: "MLXNN", package: "mlx-swift"),
-                .product(name: "MLXRandom", package: "mlx-swift"),
             ]
         ),
         .target(
@@ -72,10 +63,6 @@ let package = Package(
             name: "RinGoCoreTests",
             dependencies: ["RinGoCore"],
             resources: [.copy("Fixtures"), .copy("Goldens")]
-        ),
-        .testTarget(
-            name: "RinGoMLXTests",
-            dependencies: ["RinGoMLX"]
         ),
         .testTarget(
             name: "RinGoModelTests",

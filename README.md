@@ -146,7 +146,6 @@ step counts needed for a competitive network.
 - `Sources/RinGoModel` — `.bin.gz`/`.txt.gz` model parser + `KataGoNetwork` MLX forward.
 - `Sources/RinGoEngine` — postprocessing, SGF reader, batched `NNEvaluator` actor
   (compile-per-bucket and pipelined to keep MLX execution disciplined), MCTS, and GTP.
-- `Sources/RinGoMLX` — MLX integration used by the model and engine layers.
 - `Sources/RinGoTrain` — training losses, optimizer, data loading, and trainer support.
 - `Sources/ringo` — the `ringo` command-line executable and its subcommands.
 - `Scripts/oracle/` — tools that extract ground truth from a reference KataGo build
