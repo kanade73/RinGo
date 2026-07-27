@@ -1,0 +1,11 @@
+.build/
+.swiftpm/
+.index-build/
+DerivedData/
+*.xcodeproj
+.DS_Store
+__pycache__/
+default.metallib
+*.bin
+*.bin.gz
+*.safetensors

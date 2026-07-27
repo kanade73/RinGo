@@ -1,0 +1,27 @@
+included:
+  - Sources
+  - Tests
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+
+# This codebase is a mechanical port of KataGo's C++ (large files, long functions, x/y/loc
+# names); structural-size lints would fight the port's 1:1 traceability, so they're off.
+disabled_rules:
+  - todo
+  - identifier_name
+  - function_body_length
+  - type_body_length
+  - file_length
+  - cyclomatic_complexity
+  - function_parameter_count
+  - large_tuple
+  - nesting
+
+line_length: 200
+
+# swiftformat adds trailing commas in multi-line collections by default (Swift 6 style);
+# keep swiftlint in agreement instead of having the two tools fight over it.
+trailing_comma:
+  mandatory_comma: true
