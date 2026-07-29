@@ -7,13 +7,15 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 KG=${KATAGO_REF:-../katago-origin/KataGo}
 B=${1:-.tools/katago-eigen-build}
+LIBZIP=${LIBZIP_LIB:-$(brew --prefix libzip)/lib/libzip.dylib}
+[ -f "$LIBZIP" ] || { echo "libzip not found at $LIBZIP — 'brew install libzip', or set LIBZIP_LIB" >&2; exit 1; }
 OBJS=$(find "$B/CMakeFiles/katago.dir" -name "*.o" ! -name "main.cpp.o" ! -path "*/command/*" ! -path "*/distributed/*" ! -path "*/tests/*")
 for tool in dump_v7 dump_nn; do
   c++ -std=c++17 -O2 -fsigned-char -I"$KG/cpp" -I"$KG/cpp/external" -DUSE_EIGEN_BACKEND \
     -c "Scripts/oracle/$tool.cpp" -o "$B/$tool.o"
   # shellcheck disable=SC2086
   c++ -O2 -arch arm64 "$B/$tool.o" $OBJS -o ".tools/$tool" \
-    "$(xcrun --show-sdk-path)/usr/lib/libz.tbd" /opt/homebrew/lib/libzip.dylib
+    "$(xcrun --show-sdk-path)/usr/lib/libz.tbd" "$LIBZIP"
   echo "built .tools/$tool"
 done
 
@@ -26,5 +28,5 @@ c++ -std=c++17 -O3 -fsigned-char -I"$KG/cpp" -I"$KG/cpp/external" -I"$EIGEN_INC"
 OBJS_NO_EIGEN=$(printf '%s\n' $OBJS | grep -v 'neuralnet/eigenbackend.cpp.o')
 # shellcheck disable=SC2086
 c++ -O2 -arch arm64 "$B/dump_nn.o" "$B/eigenbackend_debug.o" $OBJS_NO_EIGEN -o ".tools/dump_nn_debug" \
-  "$(xcrun --show-sdk-path)/usr/lib/libz.tbd" /opt/homebrew/lib/libzip.dylib
+  "$(xcrun --show-sdk-path)/usr/lib/libz.tbd" "$LIBZIP"
 echo "built .tools/dump_nn_debug"

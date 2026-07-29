@@ -48,12 +48,12 @@ public enum RinGoArchitecture {
         make(.b6c96)
     }
 
-    /// The 10-block / 128-channel student (audit "実験枠"). Same recipe, larger trunk.
+    /// The 10-block / 128-channel student (the "experiment" tier). Same recipe, larger trunk.
     public static func b10c128() -> ModelDesc {
         make(.b10c128)
     }
 
-    /// The 15-block / 192-channel student (audit "博打枠").
+    /// The 15-block / 192-channel student (the "long shot" tier).
     public static func b15c192() -> ModelDesc {
         make(.b15c192)
     }

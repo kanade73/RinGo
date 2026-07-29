@@ -14,7 +14,7 @@ public enum AnalysisDataError: Error, CustomStringConvertible, Equatable {
 
 // MARK: - Query + manifest schema
 
-/// One analysis-engine query (see `docs/Analysis_Engine.md`). One query per game; `analyzeTurns`
+/// One analysis-engine query (see KataGo's `docs/Analysis_Engine.md`). One query per game; `analyzeTurns`
 /// batches every position of that game into the single query -- the doc-endorsed efficient form
 /// ("Each turn generates a separate response").
 public struct AnalysisQuery: Codable, Sendable {

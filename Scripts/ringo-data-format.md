@@ -2,7 +2,7 @@ RinGoData v2
 
 All multibyte values are little-endian. There is one file per shard. v2 is NOT backward
 compatible with v1 (dropped the one-hot policy index and added per-sample validity flags for
-distillation support, see WP-2 in `docs/strategy/TRAINING_FIX_PLAN.md`); a v1 shard must be regenerated with
+distillation support); a v1 shard must be regenerated with
 the current `ringo makedata` (~23 minutes for the full corpus) -- `TrainingShardReader` and
 `RinGoShard.read` both reject any other version with an explicit error rather than silently
 misreading the bytes.
@@ -32,7 +32,7 @@ loss and its normalization
 neutral/dame/seki-shared, using final-position area classification
 - u8: ownershipValid; 1 if ownershipTarget reflects a genuine final-position label, 0 if it
 must be excluded from the ownership loss and its normalization (e.g. a resignation, whose final
-board position is not a reliable ownership label -- docs/reviews/TRAINING_PROCESS_AUDIT.md P0-3)
+board position is not a reliable ownership label)
 
 Jigo games are skipped because there is no draw value-target component. For resignations, the
 score target is a deliberately synthetic, clamped proxy: +15.0 for the winner and -15.0 for

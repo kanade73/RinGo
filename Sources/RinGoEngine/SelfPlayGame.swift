@@ -213,7 +213,7 @@ public enum SelfPlayGameGenerator {
     /// `resignEnabled` is off -- and force-scores move-cap/no-result endings via
     /// `endAndScoreGameNow`), so `scoreValid`/`ownershipValid` are true. They are still keyed off the
     /// history flags defensively: a resignation (should it ever occur) leaves both false, exactly as
-    /// teacherless `makedata` handles a resigned SGF (TRAINING_PROCESS_AUDIT.md P0-3).
+    /// teacherless `makedata` handles a resigned SGF.
     public static func trainingSamples(from result: SelfPlayResult, nnLen: Int) -> [TrainingSample] {
         let history = result.history
         let scored = history.isScored && !history.isResignation

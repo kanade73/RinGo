@@ -24,7 +24,7 @@ public struct KataGoNetworkError: Error, CustomStringConvertible, Sendable {
 /// `forward(spatial:global:debugSink:)`, it is invoked with the (still-lazy) tensor at each
 /// bisection checkpoint (pre-block trunk, post-block trunk, transformer attention/FFN
 /// internals) plus the matching validity mask, if any. Building a summary line from `tensor`
-/// requires `eval()`, which is normally banned mid-graph (see design.md "MLX discipline") —
+/// requires `eval()`, which is normally banned mid-graph (see docs/design-notes.md "MLX discipline") —
 /// this hook is the sanctioned escape hatch for bisecting numerical parity against the
 /// reference Eigen backend's `DEBUG_INTERMEDIATE_VALUES` dumps, never used on the production
 /// path since callers must opt in explicitly.
@@ -591,7 +591,7 @@ public final class KataGoNetwork {
 /// " line, mirroring `DebugPrint::print3DSummary`/`print2DSummary` in the reference Eigen
 /// backend so lines can be diffed directly against `.tools/dump_nn_debug` stderr output.
 /// `tensor`'s last axis is treated as channels; all other axes are treated as flattened
-/// row-major "positions" (matching this port's NHWC == Eigen's NSC layout, see design.md).
+/// row-major "positions" (matching this port's NHWC == Eigen's NSC layout, see docs/design-notes.md).
 /// When `mask` is supplied its element count must equal the position count; only positions
 /// where `mask != 0` count towards valid/min/max/mean/rms (matching the reference). `first8`
 /// is always the first 8 raw values (channels 0..7 of position 0), unmasked, matching the

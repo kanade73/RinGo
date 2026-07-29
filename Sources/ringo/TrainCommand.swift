@@ -125,7 +125,7 @@ enum TrainCommand {
         ) {
             throw CLIError(description: message)
         }
-        // P0-1: if -val-data points inside (or at) the same directory as -data, its val.nngd must
+        // Holdout integrity: if -val-data points inside (or at) the same directory as -data, its val.nngd must
         // never also be read as a training shard — otherwise the "held-out" validation set is
         // actually part of train, and validation loss stops meaning anything. This exclusion is
         // unconditional, NOT gated on -val-data being passed at all: see `trainingExclusionURLs`.
@@ -143,7 +143,7 @@ enum TrainCommand {
         guard dataset.nnLen == 9 else {
             throw CLIError(description: "RinGo v1 training requires 9x9 shards; found nnLen \(dataset.nnLen)")
         }
-        // P2 (audit): a validation shard is only ever consumed when -val-interval schedules periodic
+        // A validation shard is only ever consumed when -val-interval schedules periodic
         // validation — `Trainer.train` ignores `validation` when `validationInterval == nil`. Loading
         // ~200k samples just to print a count would waste resident memory for nothing, so when
         // -val-data is given WITHOUT -val-interval we skip the load and warn. This does NOT affect the
@@ -174,7 +174,7 @@ enum TrainCommand {
         let warmupSteps = min(1000, max(1, steps / 20))
 
         // config.json: snapshot this run's parameters at startup so an unattended run directory is
-        // self-describing (P0-3.1) and metrics-trim progress is auditable (P0-3.3). P0-2 (audit):
+        // self-describing and metrics-trim progress is auditable. An earlier version:
         // an earlier version of this merged the new snapshot into whatever config.json already
         // existed on disk, keeping any pre-existing key — which let stale values (e.g. a
         // validation_shard_count computed by an older, buggy build) survive silently forever
@@ -290,13 +290,13 @@ enum TrainCommand {
 
     /// The single held-out validation shard's filename inside a `-val-data` directory. Exposed
     /// separately from `loadValidationShard` so callers can also use it as the `excluding:` set
-    /// passed to `RinGoDataset.load` (P0-1: without this, the training loader would read
+    /// passed to `RinGoDataset.load` (without this, the training loader would read
     /// `val.nngd` too when it lives in the same directory as the training shards).
     static func validationShardURL(from directory: URL) -> URL {
         directory.appendingPathComponent("val.nngd")
     }
 
-    /// The shard URLs `-data`'s directory listing must never feed into the training set (P0-1).
+    /// The shard URLs `-data`'s directory listing must never feed into the training set.
     ///
     /// Always includes `<dataDirectory>/val.nngd`, regardless of whether `-val-data` was passed at
     /// all: `makedata -val-ratio` always writes `val.nngd` alongside the training shards, so a
@@ -378,7 +378,7 @@ enum TrainCommand {
         } else {
             "fresh start (target: \(steps))"
         }
-        // P0-1: this line is train-only precisely because `dataset` (the `samples` count here) was
+        // This line is train-only precisely because `dataset` (the `samples` count here) was
         // loaded with the validation shard excluded — see the `excluding:` RinGoDataset.load call
         // above. The separate `val:` line (if present) makes both counts explicit so a run's log is
         // self-auditing without having to dig into config.json.
@@ -412,10 +412,10 @@ enum TrainCommand {
     static let defaultOwnershipWeight: Float = 0.5
     static let defaultScoreWeight: Float = 0.02
 
-    /// Writes `config.json` (P0-3.1) into the run directory, unconditionally overwriting whatever
+    /// Writes `config.json` into the run directory, unconditionally overwriting whatever
     /// was there before with the values this invocation actually computed.
     ///
-    /// P0-2 (audit finding): an earlier version merged onto any existing file, keeping every
+    /// An earlier version merged onto any existing file, keeping every
     /// pre-existing top-level key and only adding keys missing from it. That let derived values —
     /// `shard_count`, `validation_shard_count` in particular — go stale forever once written once
     /// under an older or buggier build: a resumed or rerun training job would keep reporting a
@@ -524,7 +524,7 @@ enum TrainCommand {
     }
 
     /// Updates run-state keys only (`resume_step`, `metrics_csv_trimmed_at_step`); never overwrites
-    /// the snapshot keys written at startup (P0-3.3: trim progress must be auditable across resumes).
+    /// the snapshot keys written at startup (trim progress must stay auditable across resumes).
     static func updateConfig(at url: URL, resumeStep: Int?, metricsTrimmedAtStep: Int?) throws {
         var existing = (try? readJSON(at: url)) ?? [:]
         if let resumeStep { existing["resume_step"] = resumeStep }
@@ -532,7 +532,7 @@ enum TrainCommand {
         try writeJSON(existing, at: url)
     }
 
-    /// Selects the final `model-best-val.bin.gz` (P0-1.2): if `validation_metrics.csv` exists and
+    /// Selects the final `model-best-val.bin.gz`: if `validation_metrics.csv` exists and
     /// contains a row whose step matches a saved `model-step-*.bin.gz`, symlinks to that snapshot;
     /// otherwise copies `model-final.bin.gz` to `model-best-val.bin.gz` as the safe fallback.
     static func installBestValModel(in outputDirectory: URL) throws {

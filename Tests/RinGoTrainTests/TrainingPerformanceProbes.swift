@@ -3,11 +3,10 @@ import Foundation
 @testable import RinGoTrain
 import XCTest
 
-/// THROWAWAY WP-4c measurement (gated by WP4C_PROBE_DIR). Loads a shard subset and reports resident
-/// memory for the NEW columnar u8 representation vs the OLD materialized [RinGoSample] ([Float]
-/// spatial) representation, on the SAME data, so before/after is apples-to-apples. Not part of any
-/// gate; deleted after measurement.
-final class WP4CRSSProbe: XCTestCase {
+/// Opt-in performance measurements, not correctness gates. Both are skipped unless their
+/// environment variable is set, so `swift test` on a fresh checkout never runs them; they exist
+/// so the two claims they cover can be re-measured on any machine rather than taken on trust.
+final class TrainingPerformanceProbes: XCTestCase {
     private func residentBytes() -> UInt64 {
         var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(
@@ -21,44 +20,59 @@ final class WP4CRSSProbe: XCTestCase {
         return kr == KERN_SUCCESS ? info.resident_size : 0
     }
 
+    /// Resident-memory cost of holding a dataset two ways, measured on the same shards in one
+    /// process so the comparison is apples-to-apples: the columnar `u8` representation
+    /// `RinGoDataset` actually stores, versus the `[RinGoSample]` array (`[Float]` spatial planes)
+    /// that materializing `shard.samples` produces. The gap is why the columnar form exists —
+    /// it decides whether a multi-million-sample shard set fits in unified memory at all.
+    ///
+    /// Point `RINGO_PROBE_SHARD_DIR` at a directory of `.nngd` shards to run it, and set
+    /// `RINGO_PROBE_EXTRAPOLATE_TO` to a sample count to also print the projection to a full
+    /// dataset of that size.
     func testMeasureResident() throws {
-        guard let dir = ProcessInfo.processInfo.environment["WP4C_PROBE_DIR"] else {
-            throw XCTSkip("set WP4C_PROBE_DIR to a shard subset directory")
+        let environment = ProcessInfo.processInfo.environment
+        guard let dir = environment["RINGO_PROBE_SHARD_DIR"] else {
+            throw XCTSkip("set RINGO_PROBE_SHARD_DIR to a directory of .nngd shards")
         }
         let gb = { (b: UInt64) in String(format: "%.3f GB", Double(b) / 1_073_741_824) }
         let base = residentBytes()
         let shard = try RinGoDataset.load(directory: URL(fileURLWithPath: dir))
         let afterLoad = residentBytes()
-        let samples = Array(shard.samples) // materializes the OLD [RinGoSample] representation
+        let samples = Array(shard.samples) // materializes the [RinGoSample] representation
         let afterMaterialize = residentBytes()
         let n = shard.sampleCount
-        let newResident = afterLoad - base
-        let oldResident = afterMaterialize - afterLoad
-        let full = 3_949_477.0
-        print("[WP4C RSS] samples=\(n)")
+        let columnarResident = afterLoad - base
+        let materializedResident = afterMaterialize - afterLoad
+        print("[probe rss] samples=\(n)")
         print(
-            "[WP4C RSS] base=\(gb(base)) afterLoad(new columnar)=\(gb(afterLoad)) afterMaterialize=\(gb(afterMaterialize))"
+            "[probe rss] base=\(gb(base)) afterLoad(columnar)=\(gb(afterLoad)) afterMaterialize=\(gb(afterMaterialize))"
         )
-        print("[WP4C RSS] NEW columnar resident = \(gb(newResident)) (\(newResident / UInt64(n)) B/sample)")
-        print("[WP4C RSS] OLD [RinGoSample] resident = \(gb(oldResident)) (\(oldResident / UInt64(n)) B/sample)")
-        print(String(format: "[WP4C RSS] extrapolated to full %.0f samples: NEW=%.2f GB  OLD=%.2f GB",
-                     full,
-                     Double(newResident) / Double(n) * full / 1_073_741_824,
-                     Double(oldResident) / Double(n) * full / 1_073_741_824))
+        print("[probe rss] columnar u8 resident = \(gb(columnarResident)) (\(columnarResident / UInt64(n)) B/sample)")
+        print(
+            "[probe rss] [RinGoSample] resident = \(gb(materializedResident)) "
+                + "(\(materializedResident / UInt64(n)) B/sample)"
+        )
+        if let target = environment["RINGO_PROBE_EXTRAPOLATE_TO"].flatMap(Double.init) {
+            print(String(format: "[probe rss] extrapolated to %.0f samples: columnar=%.2f GB  materialized=%.2f GB",
+                         target,
+                         Double(columnarResident) / Double(n) * target / 1_073_741_824,
+                         Double(materializedResident) / Double(n) * target / 1_073_741_824))
+        }
         withExtendedLifetime((shard, samples)) {}
-        XCTAssertGreaterThan(newResident, 0)
+        XCTAssertGreaterThan(columnarResident, 0)
     }
 
-    /// THROWAWAY WP-4c wall-time measurement (gated by WP4C_TIMING=1). Times a full validation pass
-    /// over a synthetic ~50k-sample shard the OLD way (eager, uncompiled, per-microbatch host syncs:
-    /// `evaluateEager`) vs the NEW way (compiled forward reused across microbatches, one host sync:
-    /// `evaluate`). Compiled is timed both COLD (first call, includes the one-time trace/compile) and
-    /// WARM (reused trace — the steady-state cost during a training run, which is what P1-3 targets).
-    /// GPU-contention caveat: production D1 training may share the GPU, inflating absolute numbers;
-    /// the eager-vs-warm-compiled RATIO is the meaningful figure.
+    /// Wall time of one validation pass over a synthetic 50k-sample shard, run two ways:
+    /// `evaluateEager` (uncompiled, one host sync per microbatch) versus `evaluate` (one compiled
+    /// forward reused across microbatches, one host sync for the pass). The compiled path is timed
+    /// both cold — first call, paying the one-time trace and compile — and warm, which is the
+    /// steady-state cost a training run actually pays when it validates.
+    ///
+    /// Set `RINGO_PROBE_TIMING=1` on a Metal-capable host to run it. Absolute numbers move with
+    /// whatever else is using the GPU; the eager-to-warm-compiled ratio is the figure that holds.
     func testValidationWallTime() throws {
-        guard ProcessInfo.processInfo.environment["WP4C_TIMING"] == "1" else {
-            throw XCTSkip("set WP4C_TIMING=1 (Metal-capable host) to time the validation pass")
+        guard ProcessInfo.processInfo.environment["RINGO_PROBE_TIMING"] == "1" else {
+            throw XCTSkip("set RINGO_PROBE_TIMING=1 (Metal-capable host) to time the validation pass")
         }
         let sampleCount = 50000
         let shard = try RinGoShard(nnLen: 9, samples: (0 ..< sampleCount).map(Self.syntheticSample(seed:)))
@@ -75,7 +89,7 @@ final class WP4CRSSProbe: XCTestCase {
             let start = Date()
             let m = try body()
             let elapsed = Date().timeIntervalSince(start)
-            print(String(format: "[WP4C TIME] %-18@ %6.3fs  (total=%.5f, n=%d)",
+            print(String(format: "[probe time] %-18@ %6.3fs  (total=%.5f, n=%d)",
                          label as NSString, elapsed, m.totalLoss, m.sampleCount))
         }
 

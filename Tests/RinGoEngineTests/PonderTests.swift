@@ -81,7 +81,7 @@ final class PonderTests: XCTestCase {
         XCTAssertThrowsError(try GTPCommand.parse(["-model", "m.bin.gz", "-gpu-cache-limit-mb", "notanumber"]))
     }
 
-    // MARK: - (B2) I-2 (CODEBASE_REVIEW_0711.md): absolute ponder-visits ceiling
+    // MARK: - Absolute ponder-visits ceiling
 
     /// The pure cap computation `GTPEngine.effectivePonderMaxVisits` used to be an inline
     /// `max(1, 10 * settings.maxVisits)` with no ceiling: at a tournament-scale `-visits 50000`

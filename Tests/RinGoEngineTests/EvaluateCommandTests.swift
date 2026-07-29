@@ -3,11 +3,11 @@ import Foundation
 import RinGoTrain
 import XCTest
 
-/// Tests for the `ringo evaluate` subcommand (P0-4.2). The CLI's model-loading path
+/// Tests for the `ringo evaluate` subcommand. The CLI's model-loading path
 /// runs MLX, so it stays host-only (exercised by `RUN_HOST_ONLY_MLX_TESTS=1`); the CSV writer
 /// and flag parsing are pure Swift and are covered here.
 final class EvaluateCommandTests: XCTestCase {
-    // MARK: - I-1 (CODEBASE_REVIEW_0711.md): loss-weight flags/defaults must match TrainCommand's,
+    // MARK: - Loss-weight flags/defaults must match TrainCommand's,
 
     // not LossWeights()'s bare struct defaults, or total_loss can't be overlaid with training's
     // metrics.csv despite this subcommand's docstring claiming it can.

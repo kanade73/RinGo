@@ -2,7 +2,7 @@ import Foundation
 import RinGoCore
 
 /// Formats a `SearchResult` into the single-line `kata-analyze`/`kata-genmove_analyze` payload that
-/// KataGo's GTP extensions define (`katago-origin/.../docs/GTP_Extensions.md`). One `info` block per
+/// KataGo's GTP extensions define (`docs/GTP_Extensions.md` in the KataGo tree). One `info` block per
 /// expanded root child — all concatenated on ONE line, KataGo-style — optionally followed by an
 /// `ownership` block. This is the analysis LINE only; the caller appends the `play <move>` line.
 ///

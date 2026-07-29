@@ -4,10 +4,11 @@ import RinGoCore
 import RinGoModel
 import XCTest
 
-/// WP-GS2 — DAG/graph transposition search (`SearchSettings.useGraphSearch`). T-G1..T-G13 from
-/// `docs/strategy/GRAPH_SEARCH_DESIGN.md` §3.2. Most tests drive the search with deterministic STUB
-/// evaluators (no model needed, so they run everywhere and are reproducible); the equivalence test
-/// (T-G3) uses the real b6c96 net per the design and skips cleanly when the fixture is absent.
+/// DAG/graph transposition search (`SearchSettings.useGraphSearch`); see "Graph search" in
+/// `docs/design-notes.md` for what the mode does and why. Most tests drive the search with
+/// deterministic STUB evaluators (no model needed, so they run everywhere and are reproducible);
+/// the tree-vs-graph equivalence test uses the real b6c96 net and skips cleanly when the fixture
+/// is absent.
 ///
 /// The pure-tree (OFF) path is pinned by the whole rest of the suite plus `GoldenTraceTests`; this
 /// file asserts the ON path's new properties. `SearchNode` cannot cross the actor boundary, so tests
@@ -81,7 +82,7 @@ final class GraphSearchTests: XCTestCase {
         // situation hash is weaker). It survives for 128-bit key-collision defense and code-path
         // parity. This forces exactly that collision situation: a merge target whose stored untried
         // move is illegal on the reaching path, verifying the guard regenerates without crashing and
-        // keeps the root move legal (design §8.D-1 acceptance: crash 0, pathIllegal > 0, root legal).
+        // keeps the root move legal (acceptance: crash 0, pathIllegal > 0, root legal).
         let board = Board(7, 7)
         let history = BoardHistory(board, pla: .black, rules: .getTrompTaylorish(), encorePhase: 0)
         let topMove = locOn(1, 1, 7)
@@ -120,8 +121,7 @@ final class GraphSearchTests: XCTestCase {
     func testGraphMovePromotesSubtreeAndNextSearchIsClean() async throws {
         // WP-GS3 makes flag-ON reuse graph-safe: makeMove no longer clears the table — it promotes the
         // played child's subtree onto a fresh private root built on the real advanced history, then
-        // MARK: - sweeps everything the new root can't reach. This asserts the promotion (subtree kept,
-
+        // sweeps away everything the new root can't reach. This asserts the promotion (subtree kept,
         // visits reused), the sweep invariant (table == reachable minus the out-of-table root), and
         // that the next graph search from the advanced position completes normally with a legal move.
         let board = Board(7, 7)
@@ -381,7 +381,7 @@ final class GraphSearchTests: XCTestCase {
     }
 
     private func assertEquivalent(off: SearchResult, on: SearchResult, visits: Int64, positionID: String) {
-        // Precommitted tolerances (design §3.2 T-G3).
+        // Precommitted tolerances.
         XCTAssertEqual(on.bestMove, off.bestMove, "bestMove must match exactly (\(positionID))")
         let perMoveBound = max(2, Int(ceil(0.01 * Double(visits))))
         let redistributionBound = Int(ceil(0.02 * Double(visits)))
@@ -404,7 +404,7 @@ final class GraphSearchTests: XCTestCase {
             redistributionBound,
             "total visit redistribution (\(positionID))"
         )
-        // Value-head tolerances RECALIBRATED per design §8.D-2 (the 5e-3 / 0.10 initials were flagged
+        // Value-head tolerances RECALIBRATED (the 5e-3 / 0.10 initials were flagged
         // as conservative-and-provisional). Measured ON-vs-OFF deltas at V=300 scale with transposition
         // density: empty dWin≈1e-4/dScore≈5e-3, opening dWin≈1.6e-3/dScore≈0.04, midgame (most sharing)
         // dWin≈8e-3/dScore≈0.17. This is graph search's edge-weighted aggregation pooling transposed

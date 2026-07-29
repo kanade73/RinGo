@@ -2,7 +2,7 @@ import Foundation
 import RinGoCore
 
 /// Converts a teacher network's postprocessed `NNOutput` into RinGoData v2 training targets for
-/// distillation (`makedata -teacher-model ...`, TRAINING_FIX_PLAN.md WP-2).
+/// distillation (`makedata -teacher-model ...`).
 ///
 /// The single non-obvious job here is perspective/encoding reconciliation between the PRODUCER
 /// (`NNOutputPostprocessor`, which always emits values/ownership from WHITE's perspective and a

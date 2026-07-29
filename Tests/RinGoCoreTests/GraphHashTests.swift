@@ -1,10 +1,11 @@
 @testable import RinGoCore
 import XCTest
 
-/// Pins the recipe in `docs/strategy/GRAPH_SEARCH_DESIGN.md` §2.1/§3.1 (T-H1..T-H7). GraphHash is a
-/// pure function of (BoardHistory, Board, Player, rules/komi) plus an explicit `prev` chain link, so
-/// every fixture below either drives real `Board`/`BoardHistory` state through the public API, or
-/// (T-H3) calls `GraphHash.graphHash` directly to isolate the reset/chain branch.
+/// Pins the node-identity hash the DAG search depends on (see "Graph search" in
+/// `docs/design-notes.md`). GraphHash is a pure function of (BoardHistory, Board, Player,
+/// rules/komi) plus an explicit `prev` chain link, so every fixture below either drives real
+/// `Board`/`BoardHistory` state through the public API, or calls `GraphHash.graphHash` directly
+/// to isolate the reset/chain branch.
 final class GraphHashTests: XCTestCase {
     private let repBound = 11
     private let drawEquiv = 0.5

@@ -23,8 +23,7 @@ public struct TrainerConfiguration: Sendable {
     /// If non-nil, every `validationInterval` steps the trainer evaluates the loss on the
     /// validation shard passed to `train(dataset:validation:outputDirectory:)` and appends one row
     /// to `validation_metrics.csv`. The validation forward pass is run OUTSIDE the compiled training
-    /// step (no grad, no optimizer update), so the training graph is unaffected -- see P0-4.3 in
-    /// `PRE_TOURNAMENT_IMPROVEMENTS.md` for the design intent.
+    /// step (no grad, no optimizer update), so the training graph is unaffected.
     public var validationInterval: Int?
 
     public init(
@@ -97,7 +96,7 @@ public final class Trainer {
     /// it per step would defeat compilation, so it is cached here. See `makeCompiledStep`.
     private var compiledStep: (([MLXArray]) -> [MLXArray])?
     /// The validation forward + loss, `MLX.compile`d once and reused across every microbatch of
-    /// every validation pass (audit P1-3). Built lazily on the first `evaluate` call. Invalidated
+    /// every validation pass. Built lazily on the first `evaluate` call. Invalidated
     /// alongside `compiledStep` on `loadCheckpoint` (the restored param state reshapes the trace).
     /// See `makeCompiledEvaluate`.
     private var compiledEvaluate: (([MLXArray]) -> [MLXArray])?
@@ -130,7 +129,7 @@ public final class Trainer {
     /// from `step`. `internal` (not `private`) so `@testable import` tests can inject an exact lr
     /// sequence -- e.g. to prove lr=0 truly reaches the compiled kernel on a cache-hit replay,
     /// which is exactly what `MLXOptimizers.AdamW`'s Swift-Float lr fails to do (see
-    /// MLX_TRAINING_AUDIT_0708.md P0-1 and `RinGoAdamW`'s doc comment).
+    /// `RinGoAdamW`'s doc comment).
     @discardableResult
     func trainOneStep(_ batch: TrainingBatch, learningRate: Float) -> TrainingMetrics {
         // Set the rate BEFORE invoking the compiled step: `RinGoAdamW.learningRate` is backed by
@@ -231,7 +230,7 @@ public final class Trainer {
         }
         try logger.open()
         defer { try? logger.close() }
-        // P0-1/P0-3: log both counts explicitly so a run directory is self-auditing without
+        // Log both counts explicitly so a run directory is self-auditing without
         // digging into config.json — `dataset` here has already had the validation shard excluded
         // by the caller (`TrainCommand.main`), so `trainSamples` is genuinely train-only.
         try logger.log(
@@ -250,7 +249,7 @@ public final class Trainer {
             let count = min(configuration.batchSize, indices.count)
             let selected = (0 ..< count).map { indices[(offset + $0) % indices.count] }
             offset += count
-            // Columnar hot path (audit P1-2): assemble the batch straight from the shard's u8/Float
+            // Columnar hot path: assemble the batch straight from the shard's u8/Float
             // buffers, converting spatial u8 → Float32 inline. No intermediate `RinGoSample`s.
             let batch = dataset.batch(indices: selected)
             let metrics = trainOneStep(batch)
@@ -281,7 +280,7 @@ public final class Trainer {
     /// compiled training step so the training graph is untouched -- see `validationInterval`'s doc
     /// comment. Losses are microbatch-averaged to a single weighted mean.
     ///
-    /// Audit P1-3: the forward + loss is `MLX.compile`d once (via `makeCompiledEvaluate`) and reused
+    /// The forward + loss is `MLX.compile`d once (via `makeCompiledEvaluate`) and reused
     /// for every full microbatch, and the per-component weighted sums are accumulated ON DEVICE so
     /// there is exactly ONE host sync at the end instead of five per microbatch. A partial final
     /// microbatch (the remainder) is evaluated eagerly because its shape differs from the compiled
@@ -395,7 +394,7 @@ public final class Trainer {
     /// (not baked as a graph constant) so the CURRENT parameters flow in on every call -- validation
     /// runs mid-training after the params have moved, and a plain `compile()` would replay whatever
     /// params were captured at first trace. `outputs` is empty: validation mutates no state. This
-    /// mirrors `makeCompiledStep`'s inputs-as-state discipline (see MLX_TRAINING_AUDIT_0708.md P0-1).
+    /// mirrors `makeCompiledStep`'s inputs-as-state discipline.
     private func makeCompiledEvaluate() -> ([MLXArray]) -> [MLXArray] {
         compile(inputs: [network.store], outputs: []) { [network, lossComputer] arrays in
             let batch = TrainingBatch(
@@ -416,7 +415,7 @@ public final class Trainer {
         ]
     }
 
-    /// Writes `checkpoint.safetensors` ATOMICALLY (audit P0-2): a crash or kill mid-write to the
+    /// Writes `checkpoint.safetensors` ATOMICALLY: a crash or kill mid-write to the
     /// final path would otherwise destroy an hours-long run's only resume point, since the old
     /// behaviour overwrote it in place. This saves to a temp file in the SAME directory (so the
     /// swap below is a same-volume rename, not a cross-volume copy) and only replaces the real

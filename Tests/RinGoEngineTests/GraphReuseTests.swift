@@ -4,12 +4,11 @@ import RinGoCore
 import RinGoModel
 import XCTest
 
-/// WP-GS3 — graph-safe tree reuse / GC across `Search.makeMove` under `SearchSettings.useGraphSearch`.
-/// T-R1..T-R5 from `docs/strategy/GRAPH_SEARCH_DESIGN.md` §3.3, plus the T-G6 extension (a genuinely
-/// transposed reply — review §B4) and a long-chain memory-sanity check. Deterministic STUB evaluators
-/// (shared with `GraphSearchTests`) so every case runs everywhere with no model fixture.
+/// Graph-safe tree reuse / GC across `Search.makeMove` under `SearchSettings.useGraphSearch`,
+/// including a genuinely transposed reply and a long-chain memory-sanity check. Deterministic STUB
+/// evaluators (shared with `GraphSearchTests`) so every case runs everywhere with no model fixture.
 ///
-/// These pin the WP-GS3 behavior that replaced WP-GS2's conservative clear-on-makeMove: makeMove now
+/// These pin the reuse behavior that replaced an earlier conservative clear-on-makeMove: makeMove now
 /// PROMOTES the played child's subtree onto a fresh private root built on the real advanced history,
 /// re-filters the root edges for legality, and mark-sweeps everything the new root can't reach. The
 /// pure-tree (OFF) path stays pinned by `TreeReuseTests`/`GoldenTraceTests` and is untouched here.
@@ -79,7 +78,7 @@ final class GraphReuseTests: XCTestCase {
         let rootVisits = await search.currentRootVisits()
         XCTAssertFalse(facts.contains { $0.loc == reply }, "the illegal root edge must be filtered out")
         // Filtered visits recompute to exactly 1 + Σ(kept edge visits) == the child's pre-injection
-        // visits, with NO double-increment (review §B5: stats-only recompute is visitsToAdd == 0).
+        // visits, with NO double-increment (stats-only recompute is visitsToAdd == 0).
         let keptEdgeSum = facts.reduce(Int64(0)) { $0 + $1.edgeVisits }
         XCTAssertEqual(rootVisits, 1 + keptEdgeSum, "root visits == 1 + Σ kept edge visits (no double count)")
         XCTAssertEqual(rootVisits, injected.visits, "filtered visits recompute back to the child's own visits")

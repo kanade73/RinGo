@@ -4,13 +4,12 @@ import RinGoCore
 import RinGoModel
 import XCTest
 
-/// WP-GS0 — FROZEN GOLDEN-TRACE regression net around the current (pristine-HEAD) search behavior.
+/// FROZEN golden-trace regression net around the default (tree) search behavior.
 ///
-/// Purpose: later work packages will modify `Sources/RinGoEngine/Search.swift` behind a default-OFF
-/// flag (graph search / transpositions). This suite pins the exact, observable behavior of the
-/// CURRENT default (OFF) search on a set of fixed positions/visit levels so that any later change to
-/// the OFF path is caught. It is a pure regression baseline: it asserts "identical to HEAD", never
-/// "correct go".
+/// Purpose: graph search is developed behind a default-OFF flag, so this suite pins the exact,
+/// observable behavior of the default (OFF) search on a set of fixed positions and visit levels,
+/// and any change to the OFF path is caught. It is a pure regression baseline: it asserts
+/// "identical to the recorded trace", never "correct go".
 ///
 /// ## What is captured per trace (see `GoldenTrace`)
 /// - `bestMove` — the chosen root move (GTP coordinate string). EXACT.
@@ -47,7 +46,7 @@ import XCTest
 ///   Fixtures are read/written relative to THIS source file (`#filePath`), so RECORD updates the
 ///   committed copies directly (the same pattern `NNInputsV7GoldenTests` uses for its `Goldens/`).
 ///
-/// ## Signals NOT captured (would require editing `Sources/`, which WP-GS0 forbids)
+/// ## Signals NOT captured (they would require editing `Sources/` purely to observe them)
 /// - Per-visit internal PUCT selection scores and per-node running utility/variance stats
 ///   (`SearchNode` is file-private). The observable end-state (`visitsByMove` + root value) plus the
 ///   ordered evaluator-request stream pin the descent/selection behavior tightly without them.
@@ -89,7 +88,7 @@ final class GoldenTraceTests: XCTestCase {
     }
 
     /// N = 8 diverse fixed configurations: 5 distinct positions (empty, opening, tactical, two
-    /// midgames), visit levels 64/128/200/256/400 (all <= 400 per the WP-GS0 GPU-contention rule),
+    /// midgames), visit levels 64/128/200/256/400 (all <= 400, to bound GPU time),
     /// and both worker regimes — single-leaf MCTS (`numSearchWorkers == 1`, `batchTarget == 1`) and
     /// the production batched regime (`numSearchWorkers == 8`, `leafBatchSize == 16`,
     /// `batchTarget == 8`). Tracing both guards the OFF path at the batch width real genmove uses.
@@ -418,7 +417,7 @@ final class GoldenTraceTests: XCTestCase {
 
     /// RECORD-mode reproducibility gate: two independent searches of the same config must agree
     /// exactly on every EXACT field (and within tolerance on the value heads) before a fixture is
-    /// trusted. A failure here is the important WP-GS0 finding "these settings are not deterministic".
+    /// trusted. A failure here is the important finding "these settings are not deterministic".
     private func assertDeterministic(
         _ first: GoldenTrace,
         _ second: GoldenTrace,

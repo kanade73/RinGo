@@ -3,7 +3,7 @@ import RinGoCore
 
 /// Score-utility math ported from `$KG/cpp/neuralnet/nninputs.cpp` (`namespace ScoreValue`).
 ///
-/// One deliberate deviation, documented per design.md: `expectedWhiteScoreValue` evaluates the
+/// One deliberate deviation, documented per docs/design-notes.md: `expectedWhiteScoreValue` evaluates the
 /// same Gaussian-weighted integral of the atan score-value curve that KataGo tabulates
 /// (`ScoreValue::initTables`, stepsPerUnit=10, boundStdevs=5), but computes it directly at the
 /// query point instead of building KataGo's ~350k-entry table at startup and bilinearly

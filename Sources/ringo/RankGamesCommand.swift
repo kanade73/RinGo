@@ -28,7 +28,7 @@ struct RankGamesOptions {
     var positionsOutputPath: String?
 }
 
-/// `ringo rankgames`: active-learning selection for deep labeling (BREAKTHROUGH_IDEAS.md D2).
+/// `ringo rankgames`: active-learning selection for deep labeling.
 ///
 /// Ranks a local SGF corpus by student-vs-teacher raw-policy disagreement so that the highest-value
 /// games get expensive 1000-visit analysis-engine labels first. Replays every SGF with the SAME
@@ -131,9 +131,9 @@ enum RankGamesCommand {
         let globalChannels = studentDesc.numInputGlobalChannels
 
         // Bound the MLX GPU cache for this (potentially many-minute, 300k+ position) unattended run
-        // rather than letting it grow unbounded -- conventions.md "Set MLX.Memory.cacheLimit
-        // explicitly ... for any long-running, unattended MLX process". 9x9 nets are tiny; 512 MB is
-        // ample headroom for both nets' working set at batch 256.
+        // rather than letting it grow unbounded: MLX's own default is unbounded cache growth, which
+        // is wrong for any long-running unattended process (docs/design-notes.md, Island 1 point 5).
+        // 9x9 nets are tiny; 512 MB is ample headroom for both nets' working set at batch 256.
         MLX.Memory.cacheLimit = 512 * 1024 * 1024
 
         let student = try KataGoNetwork(
@@ -281,7 +281,7 @@ enum RankGamesCommand {
     /// Runs both nets over one game's positions (chunked by `batchSize`) and returns, per position,
     /// the KL(teacher || student) over legal moves and each net's argmax legal move. Streams per game
     /// and eval()s each chunk so no more than one game's + one batch's features/logits are ever live
-    /// (conventions.md MLX discipline). The argmax is a cheap CPU pass over the same logit planes the
+    /// (docs/design-notes.md MLX discipline). The argmax is a cheap CPU pass over the same logit planes the
     /// KL already reads, so it is computed unconditionally (default `ranking.tsv` output unchanged).
     private static func scorePositions(
         positions: [ReplayPosition],
@@ -343,7 +343,7 @@ enum RankGamesCommand {
                 )
                 // fp16 can (rarely, on synthetic nets) emit a non-finite logit -> non-finite KL.
                 // Treat that as a recoverable 0 rather than poisoning the game score / crashing
-                // (conventions.md: non-finite policy in postprocessing is recoverable, never fatal).
+                // (docs/design-notes.md: non-finite policy in postprocessing is recoverable, never fatal).
                 scores.append(PositionScore(
                     kl: kl.isFinite ? kl : 0,
                     studentTopPos: argmaxLegal(studentFlat, offset: offset, legal: legal),

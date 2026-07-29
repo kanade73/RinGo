@@ -24,7 +24,7 @@ final class TrainingDataFormatTests: XCTestCase {
             in: RinGoDataFormat.headerSize ..< RinGoDataFormat.headerSize + sampleSize
         )
         XCTAssertEqual(firstBytes, independentlyEncoded(first))
-        // The bulk writer (audit P1-4) must serialize the SECOND sample byte-for-byte too, at the
+        // The bulk writer must serialize the SECOND sample byte-for-byte too, at the
         // unaligned offset that the odd v2 sampleSize produces (24 + sampleSize is not 4-aligned).
         let secondBytes = bytes.subdata(
             in: RinGoDataFormat.headerSize + sampleSize ..< RinGoDataFormat.headerSize + 2 * sampleSize
@@ -238,7 +238,7 @@ final class TrainingDataEndToEndTests: XCTestCase {
         XCTAssertTrue(try first.sample(at: 0).ownershipValid)
         XCTAssertEqual(try oneHotIndex(first.sample(at: 1).policyTarget), 10)
         // b.sgf: RE[W+R], a resignation -> the synthetic score proxy AND both validity flags false
-        // (TRAINING_PROCESS_AUDIT.md P0-3 / WP-2: a resigned game's final position isn't a
+        // (a resigned game's final position isn't a
         // trustworthy score or ownership label).
         XCTAssertEqual(try first.sample(at: 2).scoreTarget, -15)
         XCTAssertFalse(try first.sample(at: 2).scoreValid)
@@ -325,7 +325,7 @@ final class TrainingDataEndToEndTests: XCTestCase {
 final class TrainingDataValRatioTests: XCTestCase {
     /// With three SGFs and a 0.5 valRatio, one file is held out into a single `val.nngd` and the
     /// rest flow through the existing `shard-*.nngd` path. `totalShards` must still report the TRAIN
-    /// shard count (not include val.nngd), per the P0-4.1 spec; the val count lives in
+    /// shard count (not include val.nngd); the val count lives in
     /// `validationSamples`/`validationFiles`.
     func testValRatioSplitsFilesIntoTrainShardsAndSingleValNngd() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

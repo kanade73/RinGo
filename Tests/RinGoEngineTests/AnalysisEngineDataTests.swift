@@ -5,7 +5,7 @@ import XCTest
 
 /// WP-14 unit tests: KataGo analysis-engine ingest (`AnalysisLabeler`, `AnalysisExporter`,
 /// `AnalysisIngestor`). All CPU-only; the response fixtures are HAND-WRITTEN JSON following the
-/// `docs/Analysis_Engine.md` schema (`id`, `turnNumber`, `isDuringSearch`, `moveInfos[].{move,
+/// KataGo's `docs/Analysis_Engine.md` schema (`id`, `turnNumber`, `isDuringSearch`, `moveInfos[].{move,
 /// visits,winrate,prior}`, `rootInfo.{winrate,scoreLead,rawWinrate,currentPlayer}`, `ownership`,
 /// `policy`). The perspective mappings are pinned against the doc statement "All values will be from
 /// the perspective of `reportAnalysisWinratesAs`" (shipped default BLACK).

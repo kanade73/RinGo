@@ -2,7 +2,7 @@ import Foundation
 @testable import ringo
 import XCTest
 
-/// Flag parsing for `ringo averagemodels` (SWA, BREAKTHROUGH_IDEAS E4). Pure Swift — the
+/// Flag parsing for `ringo averagemodels` (SWA). Pure Swift — the
 /// model load / average / write path runs elsewhere; here we pin the CLI contract.
 final class AverageModelsCommandTests: XCTestCase {
     func testParsesCommaSeparatedModelsAndOutput() throws {

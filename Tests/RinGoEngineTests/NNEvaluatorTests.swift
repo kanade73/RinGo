@@ -8,8 +8,10 @@ import XCTest
 /// Correctness tests for `NNEvaluator` (Sources/RinGoEngine/NNEvaluator.swift). These check
 /// that batching/padding/bucketing/compiling never changes numerics relative to a direct,
 /// non-batched `KataGoNetwork.forward` + `NNOutputPostprocessor.process` call (the same
-/// primitives `ringo rawnn` uses), that fp16 stays within design.md's fp16 tolerances of
-/// fp32, and that the actor behaves correctly under concurrent submission.
+/// primitives `ringo rawnn` uses), that fp16 stays within the documented per-head tolerances of
+/// fp32 (5e-3 policy/value, 0.1 score mean, 2e-2 ownership — see
+/// `testFloat16WithinDesignTolerancesOfFloat32`), and that the actor behaves correctly under
+/// concurrent submission.
 ///
 /// Uses the b6c96 test model (same fixture as `KataGoNetworkTests`/`NNOutputPostprocessorTests`)
 /// at 19x19; positions are deterministic pseudo-random legal playouts (see `SplitMix64` /
@@ -28,7 +30,7 @@ final class NNEvaluatorTests: XCTestCase {
 
     // MARK: - Evaluator-vs-direct parity (padded, non-power-of-two, batched vs single)
 
-    /// Design.md discipline point: batching/padding/bucketing must not change numerics. 5 is
+    /// Discipline point: batching/padding/bucketing must not change numerics. 5 is
     /// deliberately not a power of two, so this exercises zero-padding up to bucket 8.
     func testEvaluatorMatchesDirectForwardNonPowerOfTwoBatch() async throws {
         try await assertEvaluatorMatchesDirect(counts: [5], precision: .float32, tolerance: 1e-5)
@@ -78,7 +80,7 @@ final class NNEvaluatorTests: XCTestCase {
         }
     }
 
-    // MARK: - fp16 vs fp32 tolerances (design.md fp16 tolerances)
+    // MARK: - fp16 vs fp32 tolerances (the per-head bounds are spelled out in the test below)
 
     func testFloat16WithinDesignTolerancesOfFloat32() async throws {
         let fp32 = try makeEvaluator(precision: .float32, maxBatchSize: 16)

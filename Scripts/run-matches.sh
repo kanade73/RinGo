@@ -22,8 +22,8 @@
 #   -resign-enabled true|false  our engine's resign behavior (default true). An uncalibrated/newly
 #                       trained net's value head can be badly miscalibrated, so a low-winrate
 #                       resign can end games (and skew win rate) on noise rather than real play —
-#                       pass false for evaluation runs of such nets (see TRAINING_PROCESS_AUDIT.md
-#                       P0-6). The opponent and referee commands are unaffected by this flag.
+#                       pass false for evaluation runs of such nets. The opponent and referee
+#                       commands are unaffected by this flag.
 #   -time <seconds>     our engine per-game time budget (GTP-side `-time`, self-budgeting across
 #                       the game). Default unset — no -time flag is emitted (current behavior:
 #                       visits-only budgeting). Only applied to the OURS command; -opp is a

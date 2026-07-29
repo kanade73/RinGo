@@ -83,7 +83,7 @@ public struct LossComputer: Sendable {
         // computes scoreMean = raw scoreValues[0] * that multiplier.
         let scorePrediction = outputs.scoreValues[.ellipsis, 0]
         // Per-sample loss (reduction: .none) so invalid samples (scoreValidTarget == 0, e.g. the
-        // resignation proxy -- TRAINING_PROCESS_AUDIT.md P0-3) can be zeroed out of both the loss
+        // resignation proxy) can be zeroed out of both the loss
         // AND its normalization, rather than diluted into a fixed-batchSize mean.
         let scorePointLoss = huberLoss(inputs: scorePrediction, targets: batch.scoreTarget / 20,
                                        delta: 10, reduction: .none)

@@ -14,9 +14,9 @@ let package = Package(
         .executable(name: "ringo", targets: ["ringo"]),
     ],
     dependencies: [
-        // Pinned exactly: mlx-swift >= 0.31.5 requires swift-tools-version 6.3, which exceeds the
-        // Swift 6.2.4 Command Line Tools installed on this machine. Bump this once Xcode/toolchain
-        // supports 6.3, then re-run `make lock`.
+        // Pinned exactly: mlx-swift >= 0.31.5 requires swift-tools-version 6.3, which is newer than
+        // the Swift 6.2.x Command Line Tools this package targets. Bump the pin once a 6.3
+        // toolchain is the baseline, then re-run `make lock`.
         .package(url: "https://github.com/ml-explore/mlx-swift", exact: "0.31.4"),
     ],
     targets: [

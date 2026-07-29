@@ -5,7 +5,7 @@ import RinGoModel
 import XCTest
 
 /// Correctness tests for `Search` (Sources/RinGoEngine/Search.swift), using the b6c96 test model
-/// at fp32 and small visit counts (see design.md/workflow.md "Oracle" for the fixture path and
+/// at fp32 and small visit counts (see README.md "Verification model" for the fixture path and
 /// `KATAGO_MODELS_DIR` seam). Runs at `nnLen = 9` throughout (not the CLI's 19) purely so these
 /// stay fast — correctness of the search algorithm doesn't depend on board size.
 final class SearchTests: XCTestCase {

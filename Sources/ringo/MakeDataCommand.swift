@@ -122,7 +122,7 @@ enum MakeDataCommand {
                 precision: teacherPrecision,
                 maxBatchSize: teacherBatchSize,
                 // Bound the MLX GPU cache for the (potentially hour-long) labeling run instead of
-                // letting it grow unbounded (audit P2, mirrors the train/NNEvaluator knob). Opt-in:
+                // letting it grow unbounded (mirrors the train/NNEvaluator knob). Opt-in:
                 // nil keeps MLX's default, matching how TrainCommand exposes it.
                 gpuCacheLimitMB: gpuCacheLimitMB
             )
@@ -167,7 +167,7 @@ enum MakeDataCommand {
                 + "samples=\(summary.totalSamples) shards=\(summary.totalShards) "
                 + String(format: "elapsed=%.3fs games/sec=%.2f", summary.elapsedSeconds, rate)
         )
-        // O-4 (P2, CODEBASE_REVIEW_0711.md): a high skip rate silently produces a smaller-than-
+        // A high skip rate silently produces a smaller-than-
         // expected training set from an ostensibly-large SGF corpus (bad rules match, wrong
         // -min-moves, a corpus that is mostly jigos/aborted games, etc.) with nothing in the
         // normal one-line summary above calling it out. Loud enough (stderr, WARNING) to be
@@ -181,7 +181,7 @@ enum MakeDataCommand {
                 ? Double(summary.teacherPositionsLabeled) / summary.teacherSeconds
                 : 0
             // End-to-end samples/sec (wall-clock, including all CPU parse/feature/serialize work)
-            // alongside the teacher-only figure, so the overlap win (audit P1-1) is visible: with
+            // alongside the teacher-only figure, so the overlap win is visible: with
             // strict alternation the two rates diverge; with the pipeline the e2e rate approaches
             // the teacher rate.
             let e2eThroughput = summary.elapsedSeconds > 0
@@ -224,7 +224,7 @@ enum MakeDataCommand {
     }
 
     /// Writes `makedata-config.json` into the shard directory so a distilled dataset is
-    /// self-describing (originality-disclosure requirement, TRAINING_FIX_PLAN.md D2): it records
+    /// self-describing (originality disclosure): it records
     /// which official KataGo net was used as the teacher, at what precision and batch size, and the
     /// resulting counts.
     private static func writeMakedataConfig(

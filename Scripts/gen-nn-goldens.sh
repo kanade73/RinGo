@@ -4,8 +4,8 @@ set -eu
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 models_dir=${KATAGO_MODELS_DIR:-../katago-origin/KataGo/cpp/tests/models}
 dump_nn="$repo_dir/.tools/dump_nn"
-sgf="$repo_dir/Tests/KataGoModelTests/Fixtures/opening.sgf"
-fixtures="$repo_dir/Tests/KataGoModelTests/Fixtures"
+sgf="$repo_dir/Tests/RinGoModelTests/Fixtures/opening.sgf"
+fixtures="$repo_dir/Tests/RinGoModelTests/Fixtures"
 
 generate() {
     model=$1

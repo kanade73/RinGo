@@ -109,7 +109,7 @@ final class TrainingHostTests: XCTestCase {
         }
     }
 
-    /// WP-2 (TRAINING_FIX_PLAN.md): RinGoData v2 replaced the one-hot policy INDEX with a dense
+    /// RinGoData v2 replaced the one-hot policy INDEX with a dense
     /// probability distribution. For a teacherless (one-hot) shard this must be numerically
     /// IDENTICAL to the old index-based cross entropy over the same logits -- this pins that
     /// equivalence through the actual `LossComputer` policy-loss path, not just MLXNN's primitive.
@@ -135,7 +135,7 @@ final class TrainingHostTests: XCTestCase {
         XCTAssertEqual(denseLoss.item(Float.self), indexLoss.item(Float.self), accuracy: 1e-5)
     }
 
-    /// TRAINING_PROCESS_AUDIT.md P0-3 / WP-2: a sample with `ownershipValid == false` must
+    /// A sample with `ownershipValid == false` must
     /// contribute exactly zero to BOTH the ownership loss and its gradient, and the loss must be
     /// normalized by the COUNT OF VALID samples rather than the batch size -- so tacking an invalid
     /// (e.g. resigned) sample onto a batch must not perturb training on the valid samples at all.
@@ -226,7 +226,7 @@ final class TrainingHostTests: XCTestCase {
         return (values[0].item(Float.self), gradient)
     }
 
-    /// MLX_TRAINING_AUDIT_0708.md P0-1 regression test: on a CACHE-HIT replay of the compiled
+    /// Learning-rate regression test: on a CACHE-HIT replay of the compiled
     /// training step (i.e. every call after the first, which is the only one that can possibly
     /// retrace), the current `optimizer.learningRate` must actually reach the compiled kernel --
     /// not the value that happened to be set when the graph was first traced. This is exactly what
@@ -268,7 +268,7 @@ final class TrainingHostTests: XCTestCase {
         XCTAssertEqual(snapshots[5], snapshots[6], "step 6 (lr=0, cache-hit replay) must be a no-op")
     }
 
-    /// MLX_TRAINING_AUDIT_0708.md P0-1 regression test, cosine-schedule sanity: the compiled step's
+    /// Learning-rate regression test, cosine-schedule sanity: the compiled step's
     /// live learning-rate argument must actually SCALE the parameter update -- proof against a
     /// stuck "did lr change from its trace-time value" gate that could apply the wrong nonzero
     /// magnitude while still passing a simpler zero-lr test.
@@ -333,7 +333,7 @@ final class TrainingHostTests: XCTestCase {
         XCTAssertEqual(observedRatio, expectedRatio, accuracy: expectedRatio * 0.05)
     }
 
-    /// MLX_TRAINING_AUDIT_0708.md P0-2 regression test: `saveCheckpoint` must write via a temp file
+    /// Checkpoint-atomicity regression test: `saveCheckpoint` must write via a temp file
     /// + atomic swap, not overwrite `checkpoint.safetensors` in place -- a crash mid-write must
     /// never destroy the only resume point of an hours-long run. Exercises both the first-ever
     /// checkpoint path (no existing file to replace) and the overwrite path (an existing checkpoint
@@ -413,7 +413,7 @@ final class TrainingHostTests: XCTestCase {
         XCTAssertEqual(a.learningRate, b.learningRate, accuracy: 1e-7)
     }
 
-    /// Audit P1-2 identity: assembling a batch from the columnar u8 store (`RinGoShard.batch`) must
+    /// Columnar-store identity: assembling a batch from the columnar u8 store (`RinGoShard.batch`) must
     /// be BIT-IDENTICAL to the reference fp32 path (`Trainer.batch` over materialized samples) for all
     /// 8 arrays -- 0/1 u8 maps to Float 0.0/1.0 exactly and every other field is copied verbatim.
     /// Uses a permutation with duplicate indices so a wrong offset / swapped-sample bug would surface.
@@ -427,7 +427,7 @@ final class TrainingHostTests: XCTestCase {
         assertBatchArraysEqual(reference, columnar)
     }
 
-    /// Audit P1-3 identity: the compiled validation pass (`Trainer.evaluate`) must produce the same
+    /// Compiled-validation identity: the compiled validation pass (`Trainer.evaluate`) must produce the same
     /// numbers as the eager reference (`Trainer.evaluateEager`) -- same weighted-mean averaging and
     /// masking. 70 samples at batch 16 forces a partial final microbatch (4 full + remainder 6), so
     /// the eager-remainder branch of the compiled path is exercised. One training step first moves the

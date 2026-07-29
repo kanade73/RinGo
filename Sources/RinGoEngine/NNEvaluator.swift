@@ -100,13 +100,13 @@ public extension NNEvaluating {
     }
 }
 
-/// The MLX island (design.md "MLX discipline"): every `MLXArray` created by this port's
+/// The MLX island (docs/design-notes.md "MLX discipline"): every `MLXArray` created by this port's
 /// performance path lives and dies inside this actor. Requests arrive as plain Swift structs
 /// (`NNRequest`) and results leave as plain Swift structs (`NNOutput`); no `MLXArray` crosses
 /// the actor boundary in either direction, so callers (a future search included) never have a
 /// chance to accidentally grow a graph across threads or eval it twice.
 ///
-/// Architecture, and why, point by point against design.md's discipline list:
+/// Architecture, and why, point by point against docs/design-notes.md's discipline list:
 ///
 /// 1. **The MLX island** — `MLXArray` never appears in this type's public API (`NNRequest`,
 ///    `NNOutput`, `KataGoNetwork.Precision` are all plain Swift/RinGoModel-metadata types).
@@ -236,7 +236,7 @@ public actor NNEvaluator: NNEvaluating {
                 globalRowLength: globalRowLength,
                 // Captures `network` (and, transitively, its MLXArray-valued weight parameters)
                 // as constants baked into the compiled graph — the weights were already eval'd
-                // once at `KataGoNetwork.init`, matching design.md point 3 ("weights are eval'd
+                // once at `KataGoNetwork.init`, matching docs/design-notes.md point 3 ("weights are eval'd
                 // once at load and captured as constants"). `MLX.compile`'s `f` parameter is not
                 // itself required to be `@Sendable` (only the closure `compile` *returns* is),
                 // so capturing the non-Sendable `KataGoNetwork` class here is legal; the returned
@@ -316,7 +316,7 @@ public actor NNEvaluator: NNEvaluating {
     /// Fills `bucket`'s next staging buffer from `chunk` (real rows via `fillRowV7` or
     /// `prefilled`, zero spatial + zero global for the padding tail — a zero spatial row has a
     /// zero mask channel, so the network treats padding rows as entirely masked-out, matching
-    /// design.md's bucketing rule), then uploads it as the two `MLXArray` inputs the compiled
+    /// docs/design-notes.md's bucketing rule), then uploads it as the two `MLXArray` inputs the compiled
     /// forward closure expects. This is the only place staging buffers are touched; by the time
     /// this function returns, the `MLXArray`s already hold their own independent copy of the
     /// data (`MLXArray(_:_:)` copies synchronously), so the staging buffer is immediately free
@@ -426,7 +426,7 @@ public actor NNEvaluator: NNEvaluating {
         return src.y * size + src.x
     }
 
-    /// The one designated sync point (design.md point 6): blocks until `pending`'s outputs are
+    /// The one designated sync point (docs/design-notes.md point 6): blocks until `pending`'s outputs are
     /// materialized and copies them to plain Swift arrays. Runs on a plain `DispatchQueue`
     /// (`Self.extractionQueue`), not the actor's own executor or a Swift Concurrency cooperative
     /// thread, so `await`ing it here genuinely suspends this actor and lets another queued

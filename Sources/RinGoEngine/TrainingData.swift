@@ -6,7 +6,7 @@ import RinGoModel
 ///
 /// All multibyte values are little-endian. There is one file per shard. v2 is NOT backward
 /// compatible with v1 (dropped the one-hot policy index and added per-sample validity flags for
-/// distillation support, see WP-2 in `TRAINING_FIX_PLAN.md`); a v1 shard must be regenerated with
+/// distillation support); a v1 shard must be regenerated with
 /// the current `ringo makedata` (~23 minutes for the full corpus) -- `TrainingShardReader`
 /// rejects any other version with an explicit error rather than silently misreading the bytes.
 ///
@@ -35,7 +35,7 @@ import RinGoModel
 /// neutral/dame/seki-shared, using final-position area classification
 /// - u8: ownershipValid; 1 if ownershipTarget reflects a genuine final-position label, 0 if it
 /// must be excluded from the ownership loss and its normalization (e.g. a resignation, whose final
-/// board position is not a reliable ownership label -- TRAINING_PROCESS_AUDIT.md P0-3)
+/// board position is not a reliable ownership label)
 ///
 /// Jigo games are skipped because there is no draw value-target component. For resignations, the
 /// score target is a deliberately synthetic, clamped proxy: +15.0 for the winner and -15.0 for
@@ -140,7 +140,7 @@ public enum TrainingSymmetry: Int, CaseIterable, Sendable {
     /// always invariant -- pass is not a board point, so no symmetry moves it.
     public func transform(policy: [Float], nnLen: Int) -> [Float] {
         // Identity is the permutation that moves nothing: return the input unchanged instead of
-        // copying it entry by entry (audit P2). This is the hot path for teacherless/distillation
+        // copying it entry by entry. This is the hot path for teacherless/distillation
         // generation, which runs with `symmetries == [.identity]`.
         if self == .identity { return policy }
         let area = nnLen * nnLen
@@ -155,8 +155,8 @@ public enum TrainingSymmetry: Int, CaseIterable, Sendable {
     }
 
     public func transform(sample: TrainingSample, nnLen: Int) -> TrainingSample {
-        // Identity moves no board point: skip the element-by-element spatial/ownership copy (audit
-        // P2). `TrainingSample`'s arrays are copy-on-write, so returning the input is byte-identical
+        // Identity moves no board point: skip the element-by-element spatial/ownership copy.
+        // `TrainingSample`'s arrays are copy-on-write, so returning the input is byte-identical
         // to the permuted-copy path and never aliases mutable state.
         if self == .identity { return sample }
         let area = nnLen * nnLen
@@ -259,7 +259,7 @@ public enum TrainingShardWriter {
             }
         }
 
-        // Bulk serialization (audit P1-4): fill one preallocated contiguous buffer with per-field
+        // Bulk serialization: fill one preallocated contiguous buffer with per-field
         // memcpy/stores instead of ~2,000 `Data.append` calls per sample (~8 billion for the full
         // corpus -- the write-side twin of the already-fixed 55x read-side bug). RinGoData is
         // little-endian and every supported host (arm64/x86_64) is little-endian, so a `[Float]`/
@@ -391,7 +391,7 @@ public struct TrainingDataOptions: Sendable {
     public var rules: Rules
     public var minimumMoves: Int
     public var symmetries: Int
-    /// Fraction of SGF files (in [0, 1)) to reserve as a held-out validation shard (P0-4.1).
+    /// Fraction of SGF files (in [0, 1)) to reserve as a held-out validation shard.
     /// When > 0, `generate` deterministically streams the chosen fraction (file order is the same
     /// every run via a stateful shuffle seeded from a fixed value) into a single `val.nngd`,
     /// while the rest of the files flow into the existing `shard-*.nngd` shards. When 0 (the
@@ -484,7 +484,7 @@ public enum TrainingDataPipeline {
         return summary
     }
 
-    /// Distillation variant of `generate` (TRAINING_FIX_PLAN.md WP-2): identical file selection,
+    /// Distillation variant of `generate`: identical file selection,
     /// validation split, and shard layout as the teacherless path, but every extracted position's
     /// targets are REPLACED by the `teacher` network's outputs (soft policy, value distribution,
     /// scoremean, and quantized ownership -- see `TeacherLabeler`). Positions are labeled BEFORE
@@ -493,10 +493,10 @@ public enum TrainingDataPipeline {
     ///
     /// Teacher labels are trustworthy for ANY position regardless of how the game ended, so both
     /// `scoreValid` and `ownershipValid` are set true for every distilled sample -- this is exactly
-    /// what makes distillation sidestep the resignation-ownership problem (P0-3).
+    /// what makes distillation sidestep the resignation-ownership problem.
     ///
     /// `serial` selects between two byte-identical implementations: the default overlapped pipeline
-    /// (audit P1-1 -- CPU parse/feature-fill of the next batch and shard serialization of the
+    /// (CPU parse/feature-fill of the next batch and shard serialization of the
     /// previous batch run concurrently with the teacher's GPU forward of the current batch) and the
     /// legacy strict CPU<->GPU alternation, kept as an `-serial` escape hatch for A/B measurement and
     /// as the parity oracle. Both paths emit the same sample order, targets, shard boundaries, and
@@ -600,7 +600,7 @@ public enum TrainingDataPipeline {
             try? fileManager.removeItem(at: valURL)
         }
 
-        // Validation split (P0-4.1): only when valRatio > 0 is the file list shuffled. The shuffle is
+        // Validation split: only when valRatio > 0 is the file list shuffled. The shuffle is
         // seeded so a re-run with the same valRatio at the same files picks the SAME val set (a
         // drifting val set would silently make validation-loss curves uncomparable across resumes).
         // When valRatio == 0 we keep the historical behavior: process files in the lexicographic
@@ -735,7 +735,7 @@ public enum TrainingDataPipeline {
         case consumer(shardsWritten: Int)
     }
 
-    /// Overlapped teacher pipeline (audit P1-1). Three stages run concurrently on distinct batches
+    /// Overlapped teacher pipeline. Three stages run concurrently on distinct batches
     /// inside a throwing task group:
     ///
     /// - **Producer** (CPU): SGF parse -> legal replay -> `fillRowV7` feature fill, grouping raw
@@ -766,7 +766,7 @@ public enum TrainingDataPipeline {
         let nnLen = options.nnLen
         let symmetries: [TrainingSymmetry] = options.symmetries == 8 ? TrainingSymmetry.allCases : [.identity]
         let startingShardIndex = summary.totalShards
-        // Small fixed pipeline depth (audit calls for 2-3 in flight). This is the credit count, so
+        // Small fixed pipeline depth (2-3 in flight). This is the credit count, so
         // the producer + evaluator + consumer can each hold one batch with no starvation, and total
         // resident batches never exceed this.
         let maxInFlightBatches = 3
@@ -925,7 +925,7 @@ public enum TrainingDataPipeline {
         return summary
     }
 
-    /// Legacy strict-alternation teacher path (audit P1-1's "before"): buffer positions, block on the
+    /// Legacy strict-alternation teacher path (the pre-overlap path): buffer positions, block on the
     /// teacher `evaluate`, then serialize -- CPU and GPU never overlap. Retained as the `-serial`
     /// escape hatch and as the byte-identity oracle for the pipelined path.
     @discardableResult
@@ -1256,7 +1256,7 @@ public enum TrainingDataPipeline {
         allSymmetries: Bool
     ) -> [TrainingSample] {
         let symmetries: [TrainingSymmetry] = allSymmetries ? TrainingSymmetry.allCases : [.identity]
-        // TRAINING_PROCESS_AUDIT.md P0-3 / TRAINING_FIX_PLAN.md WP-2: a resignation's final board
+        // A resignation's final board
         // position is not a reliable score or ownership label (the loser typically resigns with
         // stones still on the board that would never survive to a real scoring), so only genuinely
         // scored games mark their score/ownership targets valid. Teacherless makedata therefore
@@ -1271,7 +1271,7 @@ public enum TrainingDataPipeline {
 
     /// Builds the single identity (unrotated) teacherless sample for one position: a one-hot policy
     /// at the played move, the game-outcome value/score, and final-area ownership. Score and
-    /// ownership validity follow the same per-game rule as before (TRAINING_PROCESS_AUDIT.md P0-3):
+    /// ownership validity follow the same per-game rule as before:
     /// only genuinely scored games mark them valid; a resignation leaves both false. Teacher mode
     /// reuses only this sample's precomputed features (spatial/global) and replaces every target.
     private static func identitySample(
@@ -1357,7 +1357,7 @@ public enum TrainingDataPipeline {
 }
 
 /// Writes RinGoData v2 fields into a preallocated little-endian byte buffer with a running cursor.
-/// Bulk per-field copies (audit P1-4) replace the old per-scalar `Data.append` path. Assumes a
+/// Bulk per-field copies replace the old per-scalar `Data.append` path. Assumes a
 /// little-endian host (as does the read side in `RinGoShard`/`TrainingShardReader`): a `[Float]`/
 /// `[Int8]`'s in-memory bytes are already the on-disk bytes, so array fields copy straight through.
 /// Copies are byte-wise (`copyMemory`), so the unaligned per-sample float offsets that arise from

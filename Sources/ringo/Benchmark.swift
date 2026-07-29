@@ -15,7 +15,7 @@ struct BenchmarkOptions {
 }
 
 /// `ringo benchmark`: measures steady-state `NNEvaluator` throughput per batch size,
-/// reporting compile warmup cost separately (see design.md "MLX discipline" point 3) and,
+/// reporting compile warmup cost separately (see docs/design-notes.md "MLX discipline" point 3) and,
 /// with `-compare-single`, contrasting against a direct (non-batched, non-actor, uncompiled)
 /// `KataGoNetwork.forward` loop so the evaluator's own overhead is visible.
 enum Benchmark {
@@ -160,7 +160,7 @@ enum Benchmark {
 
     /// Direct single-position forward, mirroring `ringo rawnn`'s inner logic but without
     /// postprocessing (the benchmark only needs the network's raw compute cost forced to
-    /// materialize once, matching design.md's "one eval per batch" discipline even here). Takes
+    /// materialize once, matching docs/design-notes.md's "one eval per batch" discipline even here). Takes
     /// an already-`prefilled` request (see `run`) so this is an apples-to-apples contrast against
     /// the batched/compiled path: both measure NN compute, neither re-pays `fillRowV7`.
     private static func directForwardOnce(

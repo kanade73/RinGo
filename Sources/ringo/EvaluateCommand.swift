@@ -11,9 +11,9 @@ struct EvaluateOptions {
     var batchSize = 256
     var outputPath = "val_metrics.csv"
     // Defaults deliberately mirror `TrainCommand`'s `-value-weight`/`-ownership-weight`/
-    // `-score-weight` defaults, NOT `LossWeights()`'s bare struct defaults (1.5/0.06). Audit
-    // finding I-1 (CODEBASE_REVIEW_0711.md): `evaluate` used to build `LossComputer()` with no
-    // weights argument at all, so its `total_loss` used 1.5/0.06 while every real training run
+    // `-score-weight` defaults, NOT `LossWeights()`'s bare struct defaults (1.5/0.06). An earlier
+    // version of `evaluate` built `LossComputer()` with no weights argument at all, so its
+    // `total_loss` used 1.5/0.06 while every real training run
     // uses 3/0.5 (TrainCommand's `-value-weight`/`-ownership-weight` defaults) — the two
     // `total_loss` curves were silently NOT comparable despite this file's docstring claiming
     // they could be overlaid. Referencing `TrainCommand`'s named constants (not copying the
@@ -23,7 +23,7 @@ struct EvaluateOptions {
     var scoreWeight: Float = TrainCommand.defaultScoreWeight
 }
 
-/// `ringo evaluate`: pinned-load validation-loss subcommand (P0-4.2).
+/// `ringo evaluate`: pinned-load validation-loss subcommand.
 ///
 /// Loads a trained `.bin.gz` exactly like `rawnn` does (via `KataGoNetwork.forward` on
 /// `ModelRawOutputs`), runs it in batches over a validation shard, and writes a single row of
@@ -87,7 +87,7 @@ enum EvaluateCommand {
         guard !dataset.samples.isEmpty else { throw CLIError(description: "Validation shard is empty") }
 
         let desc = try ModelDesc.loadFromFileMaybeGZipped(options.model)
-        // fp32 match with training-time loss (training is fp32-only per `design.md` Island 2 #5);
+        // fp32 match with training-time loss (training is fp32-only per `docs/design-notes.md` Island 2 #5);
         // the loss formula must be apples-to-apples with the values logged in `metrics.csv`.
         let network = try KataGoNetwork(desc: desc, nnXLen: dataset.nnLen, nnYLen: dataset.nnLen, precision: .float32)
         let lossComputer = LossComputer(weights: LossWeights(

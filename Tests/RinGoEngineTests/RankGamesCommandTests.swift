@@ -2,7 +2,7 @@ import Foundation
 @testable import ringo
 import XCTest
 
-/// Tests for the `ringo rankgames` subcommand (WP-19, BREAKTHROUGH_IDEAS.md D2). The forward
+/// Tests for the `ringo rankgames` subcommand. The forward
 /// pass runs MLX, so it stays a host-only smoke; the flag parsing, KL(teacher||student) direction,
 /// per-game aggregation, and TSV writer are pure Swift and covered here (no GPU).
 final class RankGamesCommandTests: XCTestCase {

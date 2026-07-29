@@ -5,7 +5,20 @@ DerivedData/
 *.xcodeproj
 .DS_Store
 __pycache__/
+
+# Local build/tool state: Scripts/build-metallib.sh, `make oracle`, and
+# Scripts/oracle/build-dumper.sh all write here.
+.tools/
 default.metallib
+*.air
+
+# Outputs of the training pipeline in README.md ("Training and evaluation").
+data/
+runs/
+*.nngd
+*.nngb
+
+# Network weights are never committed — bring your own from https://katagotraining.org/.
 *.bin
 *.bin.gz
 *.safetensors

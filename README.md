@@ -1,5 +1,7 @@
 # RinGo
 
+[![CI](https://github.com/kanade73/RinGo/actions/workflows/ci.yml/badge.svg)](https://github.com/kanade73/RinGo/actions/workflows/ci.yml)
+
 KataGo's Go engine ported to Swift + [MLX](https://github.com/ml-explore/mlx-swift) for Apple
 Silicon: model loading (v8–v17 incl. nested-bottleneck and transformer nets), a numerically
 faithful MLX forward pass, V7 input features, a batched/compiled evaluator, PUCT MCTS, and a
@@ -21,6 +23,10 @@ from https://katagotraining.org/.
 - macOS 14 or later on Apple Silicon.
 - Swift 6.2 or later, provided by a Swift toolchain or the Xcode Command Line Tools.
 - A Metal device. The test suite exercises real MLX kernels.
+- For `make check`: `brew install swiftformat swiftlint`. Building and running the engine itself
+  needs neither.
+- Only for the oracle path below (`make oracle`, `make goldens`, `Scripts/check-rawnn-parity.sh`):
+  `cmake`, `brew install eigen libzip`, `python3`, and a KataGo checkout.
 
 ## Quick start
 
@@ -97,7 +103,8 @@ the root prior and per-child Q values.
 format, so the same file loads in RinGo and in reference KataGo.
 
 `data/shards/makedata-config.json` records the labelling provenance (teacher model, visits,
-target kind, rules, symmetries).
+target kind, rules, symmetries). The on-disk shard format itself (`.nngd`, "RinGoData v2") is
+specified in [`Scripts/ringo-data-format.md`](Scripts/ringo-data-format.md).
 
 ### Holdout integrity
 
@@ -130,6 +137,11 @@ step counts needed for a competitive network.
 
 19×19 genmove at 400 visits with b6c96: ~0.17 s/move.
 
+The reference column is KataGo's Eigen **CPU** backend, so this is not a like-for-like
+accelerator comparison — it is the same build these numbers are verified against, which is why it
+is the baseline quoted here. For a fair GPU-to-GPU figure on a Mac, compare against KataGo's
+OpenCL backend instead; that measurement is not included.
+
 ## Tournament results
 
 - CGF Open 2026 (Japan), 2026-07-25, 9x9: 7th of 16 (6W-5L-1D), running RinGo's
@@ -153,13 +165,21 @@ step counts needed for a competitive network.
 
 The architecture separates pure-Swift Go logic, MLX model execution, search, training, and
 the CLI; verification uses reference fixtures with explicit numerical tolerances and non-goals.
+[`docs/design-notes.md`](docs/design-notes.md) covers the parts whose shape is not obvious from
+the code: how MLX's lazy evaluation is kept under control, the numerical conventions parity
+depends on, and what the optional DAG search does.
+
+`Scripts/run-matches.sh` plays a match against another GTP program to measure strength; it drives
+`gogui-twogtp`, which it expects at `../gogui/bin/gogui-twogtp` and which is not bundled here.
 
 ## Verification model
 
 Ground truth is the reference C++ KataGo (read-only clone, Eigen CPU backend):
 committed golden fixtures cover features (plane-exact), network outputs (≤1e-4 fp32), and
 end-to-end `rawnn` output (18/18 position×model pairs). `make oracle` rebuilds the reference
-binary; `make goldens` / `Scripts/gen-*-goldens.sh` regenerate fixtures.
+binary; `make goldens` / `Scripts/gen-*-goldens.sh` regenerate fixtures; and
+`Scripts/check-rawnn-parity.sh` re-runs those 18 end-to-end comparisons against it, reporting how
+many pairs it actually checked.
 
 Model-backed tests locate reference nets via `KATAGO_MODELS_DIR`, defaulting to
 `../katago-origin/KataGo/cpp/tests/models` (a KataGo checkout beside this repo). Without those

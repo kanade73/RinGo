@@ -4,7 +4,7 @@ import RinGoCore
 import RinGoModel
 import XCTest
 
-/// WP-GS3 / WP-GS3.5 benchmark (design §3.4-6): quantifies (a) the per-playout Board/History COPY share
+/// Graph-search benchmark: quantifies (a) the per-playout Board/History COPY share
 /// graph mode adds, (b) end-to-end search NPS with graph search ON vs OFF at 9x9 / V1600 / fp16 on the
 /// real net, per position (opening vs midgame) and aggregate, and (c) the transposition dedup graph mode
 /// buys — merges and NN-evals-saved — which is what pays for the DAG bookkeeping. The design gate is

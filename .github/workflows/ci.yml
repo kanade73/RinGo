@@ -1,0 +1,50 @@
+name: CI
+
+# Gates format, lint, and compilation. It deliberately does NOT run `swift test`:
+# the suite exercises real MLX kernels and needs a Metal device, which hosted runners
+# do not reliably provide. Run the full gate locally with `make check`.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: lint + build
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select the newest installed Xcode
+        run: |
+          latest="$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+          echo "Using $latest"
+          sudo xcode-select -s "$latest"
+          swift --version
+
+      - name: Cache SwiftPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Install lint tools
+        run: brew install swiftformat swiftlint
+
+      - name: Resolve dependencies
+        run: make setup
+
+      - name: Lint
+        run: make lint
+
+      - name: Build
+        run: make typecheck

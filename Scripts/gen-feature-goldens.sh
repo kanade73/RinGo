@@ -11,8 +11,8 @@ import subprocess
 from pathlib import Path
 
 root = Path.cwd()
-fixtures = root / "Tests/KataGoCoreTests/Fixtures"
-goldens = root / "Tests/KataGoCoreTests/Goldens"
+fixtures = root / "Tests/RinGoCoreTests/Fixtures"
+goldens = root / "Tests/RinGoCoreTests/Goldens"
 goldens.mkdir(parents=True, exist_ok=True)
 
 komi_half_rules = json.dumps({

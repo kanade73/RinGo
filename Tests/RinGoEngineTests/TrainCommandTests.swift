@@ -59,7 +59,7 @@ final class TrainCommandTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: missing.path))
     }
 
-    // MARK: - P0-1.1: snapshot/checkpoint intervals
+    // MARK: - Snapshot/checkpoint intervals
 
     /// The PRE_TOURNAMENT spec strictly asks for snapshotInterval to default to 5000 (vs the old
     /// 1000) so fresh runs don't snapshot twice as often as they checkpoint. Pinning this asserts
@@ -73,7 +73,7 @@ final class TrainCommandTests: XCTestCase {
 
     /// RinGo's small-scale Step A needs stronger value/ownership signal and looser gradient clipping
     /// than KataGo's reference settings for large-scale data. These defaults are tuned from the
-    /// TrainingDiagnosticsTests runs in STRONG_MODEL_PLAN.md P0-A.
+    /// `TrainingDiagnosticsTests` runs.
     func testTrainCommandDefaultsFavorValueOwnershipLearning() {
         XCTAssertEqual(TrainCommand.defaultValueWeight, 3)
         XCTAssertEqual(TrainCommand.defaultOwnershipWeight, 0.5)
@@ -81,7 +81,7 @@ final class TrainCommandTests: XCTestCase {
         XCTAssertEqual(TrainCommand.defaultMaxGradNorm, 5)
     }
 
-    // MARK: - P0-1.2: model-best-val selection
+    // MARK: - model-best-val selection
 
     func testInstallBestValCopiesModelFinalWhenNoValidationMetricsExist() throws {
         let directory = try makeTempDirectory()
@@ -167,7 +167,7 @@ final class TrainCommandTests: XCTestCase {
         XCTAssertNil(TrainCommand.findSnapshot(for: 6000, in: directory))
     }
 
-    // MARK: - P0-1 hardening: val.nngd exclusion must not depend on -val-data being passed
+    // MARK: - Hardening: val.nngd exclusion must not depend on -val-data being passed
 
     /// The orchestrator-flagged residual leak: a shard directory produced by `makedata -val-ratio`
     /// always has `val.nngd` sitting next to the training shards, whether or not this particular
@@ -225,7 +225,7 @@ final class TrainCommandTests: XCTestCase {
         ))
     }
 
-    // MARK: - P0-3.1: config.json
+    // MARK: - config.json
 
     func testWriteConfigCreatesFileWithExpectedRunSnapshotKeys() throws {
         let directory = try makeTempDirectory()
@@ -274,7 +274,7 @@ final class TrainCommandTests: XCTestCase {
         XCTAssertNil(parsed["metrics_csv_trimmed_at_step"])
     }
 
-    /// P0-2 (audit): an earlier version of `writeConfig` merged onto any pre-existing config.json,
+    /// An earlier version of `writeConfig` merged onto any pre-existing config.json,
     /// keeping every key already on disk and only filling in ones missing from it. That let stale
     /// values — e.g. a `validation_shard_count` written by an older, buggy build — survive forever
     /// across reruns of the same output directory, no matter how many times the underlying bug got

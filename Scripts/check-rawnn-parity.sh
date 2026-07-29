@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# A non-matching glob must not silently degrade into "checked nothing, exited 0" — this script
+# is the end-to-end parity gate, so an empty fixture set is a failure, not a pass.
+shopt -s nullglob
 
 cd "$(dirname "$0")/.."
 
+FIXTURE_DIR=Tests/RinGoCoreTests/Fixtures
+GOLDEN_DIR=Tests/RinGoCoreTests/Goldens
 ORACLE=${KATAGO_ORACLE:-.tools/katago-eigen-build/katago}
 MODEL_DIR=${KATAGO_MODELS_DIR:-../katago-origin/KataGo/cpp/tests/models}
 models=(
@@ -25,13 +30,14 @@ logToStdout = false
 EOF
 
 status=0
-for sgf in Tests/KataGoCoreTests/Fixtures/*.sgf; do
+checked=0
+for sgf in "$FIXTURE_DIR"/*.sgf; do
   name=$(basename "$sgf" .sgf)
   if [[ "$name" == *encore-phase-2* ]]; then
     echo "SKIP $name (encore phase 2)"
     continue
   fi
-  golden="Tests/KataGoCoreTests/Goldens/$name.json"
+  golden="$GOLDEN_DIR/$name.json"
   if [[ ! -f "$golden" ]]; then
     echo "SKIP $name (no golden metadata)"
     continue
@@ -132,6 +138,7 @@ if errors:
 PY
     then
       echo "PASS $label"
+      checked=$((checked + 1))
     else
       echo "FAIL $label"
       status=1
@@ -139,4 +146,11 @@ PY
   done
 done
 
+if ((checked == 0)); then
+  echo "No position x model pair was checked — $FIXTURE_DIR/*.sgf matched nothing," >&2
+  echo "or every fixture lacked a golden in $GOLDEN_DIR. Refusing to report success." >&2
+  exit 1
+fi
+
+echo "checked $checked position x model pairs"
 exit "$status"

@@ -2,7 +2,7 @@ import Foundation
 @testable import ringo
 import XCTest
 
-/// WP-27 (Codex R1 finding #5): unit tests for the GTP per-command wall-clock watchdog. A hung
+/// Unit tests for the GTP per-command wall-clock watchdog. A hung
 /// MLX/Metal evaluation blocks `array.wait()` forever holding mlx-swift's global `evalLock`, which
 /// no `Task.cancel()` can interrupt, so the search actor (and the whole GTP loop) wedges with no
 /// in-process recovery. `GTPCommand.withWatchdog` is the loud-failure guard around each command; it

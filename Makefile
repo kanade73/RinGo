@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
-.PHONY: help setup check lint typecheck test dev lock
+.PHONY: help setup check lint typecheck test dev lock oracle goldens
 
 help: ## Show targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | sed -e 's/:.*## / — /'
@@ -20,8 +20,8 @@ typecheck: ## Compile without running tests
 test: ## Unit tests
 	swift test
 
-dev: ## Run locally
-	@echo "No runnable target yet — see .claude/docs/design.md"
+dev: ## Print the ringo CLI usage (release build)
+	swift run -c release ringo --help
 
 lock: ## Regenerate Package.resolved (sanctioned dependency-update path)
 	swift package resolve

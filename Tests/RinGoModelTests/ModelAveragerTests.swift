@@ -2,7 +2,7 @@ import Foundation
 @testable import RinGoModel
 import XCTest
 
-/// SWA weight-averaging (`ModelAverager`, BREAKTHROUGH_IDEAS E4). Pure CPU: builds tiny synthetic
+/// SWA weight-averaging (`ModelAverager`). Pure CPU: builds tiny synthetic
 /// same-architecture descriptors and checks the arithmetic-mean contract, self-average identity,
 /// shape/architecture refusals, and that an averaged descriptor survives the `ModelWriter` path.
 final class ModelAveragerTests: XCTestCase {

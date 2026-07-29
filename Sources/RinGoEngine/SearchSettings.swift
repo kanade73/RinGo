@@ -9,7 +9,7 @@ import Foundation
 /// `rootPolicyOptimism = 0.2`, `fpuParentWeightByVisitedPolicyPow = 2.0`,
 /// `cpuctUtilityStdevScale = 0.85`.
 ///
-/// What this port's search implements vs. skips (design.md scoping; skips are also noted at the
+/// What this port's search implements vs. skips (docs/design-notes.md scoping; skips are also noted at the
 /// matching code sites in `Search.swift`):
 ///
 /// Ported:

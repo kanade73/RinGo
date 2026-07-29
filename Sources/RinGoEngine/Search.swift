@@ -10,14 +10,14 @@ public struct SearchError: Error, CustomStringConvertible, Sendable {
     }
 }
 
-/// Graph-search event counters (design §2.4). Exposed through `Search.graphDiagnosticsSnapshot()`
+/// Graph-search event counters. Exposed through `Search.graphDiagnosticsSnapshot()`
 /// for the adversarial tests (path-illegal / collision / cycle coverage) and self-play smoke logs.
 struct GraphDiagnostics: Equatable {
     /// Playouts where the PUCT-selected move was illegal on the actual path history, forcing a
     /// path-specific NN regeneration (KataGo `search.cpp:1239-1286`).
     var pathIllegal = 0
     /// Node-table hits whose full-state fingerprint did NOT match, i.e. a genuine hash collision of
-    /// unrelated positions, forced to a private (non-merged) node (review §B2).
+    /// unrelated positions, forced to a private (non-merged) node.
     var collisions = 0
     /// Playouts that would have descended into a node already on the current path (a cycle),
     /// bailed with an edge visit (KataGo `search.cpp:1393-1414`).
@@ -174,7 +174,7 @@ final class SearchNode {
 
     /// Breaks this node's outgoing references so a doomed node in a DAG (which may sit on a cycle of
     /// strong references once transpositions link it both ways) can be freed by ARC. Used by graph
-    /// mode's table teardown; `unowned`/`weak` were rejected (design §2.5-5 / review §A6) in favor of
+    /// mode's table teardown; `unowned`/`weak` were rejected in favor of
     /// strong edges plus this explicit teardown.
     func clearLinks() {
         children.removeAll()
@@ -310,12 +310,12 @@ public actor Search {
     /// (KataGo `search.cpp:725-729`). A single dictionary replaces KataGo's sharded map + mutex pool
     /// because this port's search is a serial actor.
     private var nodeTable: [Hash128: SearchNode] = [:]
-    /// Adversarial-test / smoke-log counters for graph-mode events (design §2.4 diagnostics seam).
+    /// Adversarial-test / smoke-log counters for graph-mode events (diagnostics seam).
     private var graphDiagnostics = GraphDiagnostics()
     /// Warn-once-per-search set for path-illegal regenerations, keyed by the regenerated output's
     /// `nnHash` (KataGo `thread.illegalMoveHashes`, `search.cpp:1268`). Reset each `runSearch`.
     private var warnedIllegalHashes: Set<Hash128> = []
-    /// WP-GS3 ARC-leak probe (T-R2/T-R4): a test arms this with WEAK references to the current table
+    /// ARC-leak probe: a test arms this with WEAK references to the current table
     /// nodes just before a re-root/clear, then reads back how many survived. Because it never
     /// strong-references a node it cannot itself keep a swept node alive, so a residual count above
     /// the reachable set would expose a mark-sweep cycle leak. Always `nil` outside those tests.
@@ -587,7 +587,7 @@ public actor Search {
         nodeTable[key] = node
     }
 
-    // MARK: - WP-GS3 reuse/GC test seams (design §3.3 T-R1..T-R5)
+    // MARK: - Graph reuse/GC test seams
 
     /// Whether the graph node table currently holds an entry under `hash` — used by T-R5 to assert the
     /// old in-table copy of a promoted position is swept away after a re-root.
@@ -988,7 +988,7 @@ public actor Search {
         return batch
     }
 
-    /// fp16 resilience (conventions.md): a non-finite policy sum only shows up on synthetic
+    /// fp16 resilience (docs/design-notes.md): a non-finite policy sum only shows up on synthetic
     /// test-only checkpoints, never on real trained nets, but `NNOutputPostprocessor` throws
     /// rather than crashing when it happens — retry once at fp32, scoped to just the offending
     /// position, and log one warning. A batch-level throw loses every result in that physical
@@ -1408,7 +1408,7 @@ public actor Search {
 
     //
     // Everything below runs ONLY when `settings.useGraphSearch` is true; the pure-tree path above is
-    // untouched. Design: docs/strategy/GRAPH_SEARCH_DESIGN.md §2.4-2.7. Reference: KataGo
+    // untouched. Design: "Graph search" in docs/design-notes.md. Reference: KataGo
     // `$KG/cpp/search/search.cpp` / `searchupdatehelpers.cpp`.
 
     /// One step along a graph-mode descent path: a node plus the index of the edge INTO it within its
@@ -1459,7 +1459,7 @@ public actor Search {
 
     /// The graph-mode playout loop, mirroring `runSearch`'s pure-tree loop but collecting/backing up
     /// through the DAG core, and rolling back pending virtual losses / node states on an evaluator
-    /// throw (review §B8) so the tree is left quiescent for the next search.
+    /// throw so the tree is left quiescent for the next search.
     private func runGraphPlayoutLoop(
         batchTarget: Int,
         maxVisits: Int64,
@@ -1596,7 +1596,7 @@ public actor Search {
         }
     }
 
-    /// Edge-weighted PUCT (design §2.4: only `childWeight` and `totalChildWeight` change vs pure
+    /// Edge-weighted PUCT (only `childWeight` and `totalChildWeight` change vs pure
     /// tree — everything else, including the FPU/stdev math, is shared). Also decides child creation
     /// with the collision contract, catch-up, and path-illegal regeneration.
     private func selectChildGraph(
@@ -1676,7 +1676,7 @@ public actor Search {
     /// Creates (or merges to) the child reached by playing `loc` from `node` on the path, computing
     /// the child's chained `GraphHash` and consulting the node table with a full-state fingerprint:
     /// - table hit + fingerprint match → MERGE: link the shared node and catch-up its lead;
-    /// - table hit + fingerprint mismatch → COLLISION: a private, never-merging node (review §B2);
+    /// - table hit + fingerprint mismatch → COLLISION: a private, never-merging node;
     /// - table miss → a fresh node, inserted under its hash.
     private func createChildGraph(
         node: SearchNode,
@@ -1891,7 +1891,7 @@ public actor Search {
     }
 
     /// Tears down the graph node table, breaking every node's outgoing edges first so a DAG that has
-    /// linked transpositions into reference cycles can be freed by ARC (design §2.5-5/6). A no-op in
+    /// linked transpositions into reference cycles can be freed by ARC. A no-op in
     /// pure-tree mode (the table is always empty there).
     private func clearGraphTable() {
         for (_, node) in nodeTable {
@@ -1900,7 +1900,7 @@ public actor Search {
         nodeTable.removeAll()
     }
 
-    // MARK: - Graph-safe re-root (WP-GS3, design §2.5, review §B4/§B10)
+    // MARK: - Graph-safe re-root
 
     /// Re-roots the graph after one legal move (`makeMove` under `useGraphSearch`). Faithful to
     /// KataGo `search.cpp:318-399` (root promotion) + `beginSearch`'s root-child legality filter
@@ -1915,14 +1915,14 @@ public actor Search {
     ///    edges + untried moves are transplanted onto the new root. The fingerprint is
     ///    `graphFingerprintMatches` (NOT `canReuseSubtree`): a genuine transposition reached by a
     ///    different order ALWAYS differs in `koHashHistory`, so requiring history equality would
-    ///    wrongly reject valid reuse (review §B4). Superko correctness is instead upheld by the
+    ///    wrongly reject valid reuse. Superko correctness is instead upheld by the
     ///    descent-time path-legality guard plus step 3's strict root-edge re-filter.
     /// 3. The new root's edges are re-checked for legality on the real history; any illegal edge is
     ///    dropped and the root's visits/stats are rebuilt stats-only (`recomputeFromChildren(...,
-    ///    visitsToAdd: 0)`, no double-increment — review §B5).
+    ///    visitsToAdd: 0)`, no double-increment).
     /// 4. A cycle-aware mark-sweep keeps only nodes reachable from the new root and tears down +
     ///    removes the rest from the table — including the old in-table copy of the promoted position
-    ///    whenever no surviving transposition reaches it (review §B10: root-out-of-table alone does
+    ///    whenever no surviving transposition reaches it (root-out-of-table alone does
     ///    not guarantee a single identity). When reuse doesn't apply the new root is childless, so
     ///    the sweep reclaims the entire table (equivalent to `clearGraphTable`).
     ///
@@ -1954,7 +1954,7 @@ public actor Search {
     /// doesn't end the game, and the child is an expanded node whose graph fingerprint matches the
     /// real advanced position. Uses `graphFingerprintMatches` (NOT `canReuseSubtree`): a genuine
     /// transposition reached by another order always differs in `koHashHistory`, so history equality
-    /// would wrongly reject valid reuse (review §B4). Otherwise `nil`, forcing a fresh root.
+    /// would wrongly reject valid reuse. Otherwise `nil`, forcing a fresh root.
     private func promotableGraphChild(
         for loc: Loc,
         board: Board,
@@ -1982,7 +1982,7 @@ public actor Search {
     /// completed/quiesced search leaves the subtree with none. `graphHash` is copied for consistency
     /// but is authoritatively recomputed from scratch at the next `runSearch` (KataGo `:712-714`);
     /// that recompute equals the child's stored key, so the transplanted grandchildren stay findable
-    /// under their existing table keys (chain-hash associativity — design §2.5).
+    /// under their existing table keys (chain-hash associativity).
     private func transplantGraphStats(from child: SearchNode, to newRoot: SearchNode) {
         newRoot.graphHash = child.graphHash
         newRoot.state = .expanded
@@ -2000,11 +2000,11 @@ public actor Search {
         }
     }
 
-    /// Incremental mark-sweep GC (design §2.5-5, review §A6; KataGo `search.cpp:382-384`): with the
+    /// Incremental mark-sweep GC (KataGo `search.cpp:382-384`): with the
     /// new root already installed, mark everything reachable from it (cycle-safe identity DFS), then
     /// break the outgoing edges of every UNREACHABLE table node BEFORE dropping it from the table —
     /// the explicit teardown is what lets ARC reclaim a doomed node that a transposition has linked
-    /// into a reference cycle (`unowned`/`weak` were rejected — review §A6). No reachable node ever
+    /// into a reference cycle (`unowned`/`weak` were rejected). No reachable node ever
     /// points at a doomed node (reachability is closed under the child relation), so clearing the
     /// doomed set's links can never sever a surviving node's subtree. Cost is bounded by the reused
     /// subtree's size, not the whole (now-discarded) previous tree.
@@ -2139,7 +2139,7 @@ public actor Search {
         var rootChildWinValues = [Loc: Double](minimumCapacity: root.children.count)
         for (loc, child, edgeVisits) in root.children {
             // Graph mode reports each move's EDGE visits (this root's own investment); a shared
-            // child's `node.visits` includes other inbound edges (design §2.7 / review §B3). The
+            // child's `node.visits` includes other inbound edges. The
             // per-child value stays the shared node's averaged `winValueAvg`. Pure-tree mode reads
             // `child.visits` unchanged (edge == node visits there).
             visitsByMove.append((loc, settings.useGraphSearch ? edgeVisits : child.visits))
@@ -2188,7 +2188,7 @@ public actor Search {
         let policyProbs = rootPolicyProbs ?? nnOutput.policyProbs
         let children = root.children.map { loc, child, edgeVisits in
             // Graph mode: play-selection weight / sample size is the EDGE visit count; the utility
-            // moments stay the shared node's averages (design §2.7). Pure-tree: `child.visits`.
+            // moments stay the shared node's averages. Pure-tree: `child.visits`.
             SearchLCB.ChildStat(
                 loc: loc,
                 visits: settings.useGraphSearch ? edgeVisits : child.visits,

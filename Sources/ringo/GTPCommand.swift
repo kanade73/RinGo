@@ -60,17 +60,17 @@ struct GTPOptions {
     var rootNumSymmetries = 1
     var ponder = false
     /// Cap on NEW visits per ponder search (memory bound). 0 = auto: min(10x -visits, 20000) --
-    /// see `GTPEngine.effectivePonderMaxVisits` (I-2, CODEBASE_REVIEW_0711.md: uncapped 10x let a
-    /// high -visits config grow an unbounded background tree).
+    /// see `GTPEngine.effectivePonderMaxVisits` (uncapped 10x let a high -visits config grow an
+    /// unbounded background tree).
     var ponderMaxVisits: Int64 = 0
     /// GPU cache limit in MB for the search NNEvaluator (nil = MLX's default, uncapped). Mirrors
-    /// `train`/`makedata`'s `-gpu-cache-limit-mb` (I-2, CODEBASE_REVIEW_0711.md: gtp had no cache
-    /// cap at all despite being the process most likely to run for hours at a tournament).
+    /// `train`/`makedata`'s `-gpu-cache-limit-mb` (gtp had no cache cap at all despite being
+    /// the process most likely to run for hours at a tournament).
     var gpuCacheLimitMB: Int?
     /// WP-12: path to an opening book produced by `ringo bookconvert`. Off by default (nil = no
     /// book); when set, `genmove` probes it before search and plays book moves instantly on a hit.
     var bookPath: String?
-    /// WP-27 (Codex R1 finding #5): per-command wall-clock watchdog, in seconds. A hung MLX/Metal
+    /// WP-27: per-command wall-clock watchdog, in seconds. A hung MLX/Metal
     /// evaluation (a Metal command buffer that completes with error drops the batch's completion
     /// event, so `array.wait()` blocks forever holding mlx-swift's global `evalLock`) wedges the
     /// search actor with NO in-process recovery — the wait is a synchronous C call inside a lock
@@ -242,7 +242,7 @@ enum GTPCommand {
         FileHandle.standardError.write(Data((
             "FATAL: GTP command \(command.split(separator: " ").first.map(String.init) ?? command) "
                 + "exceeded the \(Int(seconds.rounded()))s wall-clock watchdog — the MLX/Metal "
-                + "evaluator is wedged (an unrecoverable hung GPU eval; Codex R1 finding #5). "
+                + "evaluator is wedged (an unrecoverable hung GPU eval). "
                 + "Force-exiting so the supervisor can restart: this game is lost but later rounds "
                 + "are saved.\n"
         ).utf8))

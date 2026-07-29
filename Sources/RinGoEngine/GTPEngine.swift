@@ -91,9 +91,9 @@ public actor GTPEngine {
     private let ponderMaxVisits: Int64
     private var ponderTask: Task<Void, Never>?
 
-    /// Default ponder cap (O-2/I-2, CODEBASE_REVIEW_0711.md): an unset `-ponder-max-visits`
-    /// (`requested <= 0`) used to fall back to `10x -visits` uncapped, so a tournament-scale
-    /// `-visits 50000` config let a single ponder grow a 500k-node background tree — an
+    /// Default ponder cap: an unset `-ponder-max-visits` (`requested <= 0`) used to fall back to
+    /// `10x -visits` uncapped, so a tournament-scale `-visits 50000` config let a single ponder
+    /// grow a 500k-node background tree — an
     /// unbounded-in-practice memory grower for a search actor that runs for the ENTIRE duration
     /// of the opponent's clock. `20_000` is an absolute ceiling on top of the `10x` heuristic
     /// (whichever is smaller): generous for any realistic tournament `-visits` setting (the low
@@ -119,9 +119,9 @@ public actor GTPEngine {
     /// and by `GTPAnalyzeTests`'s genmove-vs-analyze visit-distribution equivalence check.
     private var lastGenmoveResult: SearchResult?
 
-    /// WP-24 (docs/reviews/CODEX_DEBATE_0712.md R1 finding #3): `Search.runSearch`'s deadline is
-    /// only checked between playout batches, so the root-bootstrap NN evaluation (the very first
-    /// batch) always runs to completion regardless of `timeBudget` — even a budget of exactly 0
+    /// `Search.runSearch`'s deadline is only checked between playout batches, so the root-bootstrap
+    /// NN evaluation (the very first batch) always runs to completion regardless of `timeBudget` —
+    /// even a budget of exactly 0
     /// still pays for one full evaluation (tens of ms, more under a cold cache/slow batch). Under
     /// sudden death with (near-)zero remaining time (e.g. a referee sending `time_left B 0 0`),
     /// that unconditional spend can burn the entire remainder and lose the game on time.
@@ -277,7 +277,7 @@ public actor GTPEngine {
     // これから使うグラフの計算を温めている。ネットに理解が深まってきたら戻ってくる。
     // ここは書き換えたくないので、publicとしたところからprivateを呼び出すようにしている。
 
-    /// Pre-warms every `NNEvaluator` compile bucket (design.md MLX discipline posint 3: fp32
+    /// Pre-warms every `NNEvaluator` compile bucket (docs/design-notes.md MLX discipline point 3: fp32
     /// `compile()` warmup can be ~80x slower than fp16's, so long-lived processes should pay it
     /// once at startup, not on the first real `genmove`) with dummy all-empty-board batches.
     public func preWarm(bucketSizes: [Int]) async throws {

@@ -8,7 +8,7 @@ struct AverageModelsOptions {
     var output = ""
 }
 
-/// `ringo averagemodels`: SWA (stochastic weight averaging, BREAKTHROUGH_IDEAS E4).
+/// `ringo averagemodels`: SWA (stochastic weight averaging).
 ///
 /// Loads two-or-more same-architecture RinGo `.bin.gz` snapshots, averages every weight tensor
 /// (fp32 accumulation, `ModelAverager`), and writes the mean as a standard `.bin.gz` via

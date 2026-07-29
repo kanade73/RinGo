@@ -1,7 +1,7 @@
-/// GraphHash — superko-safe node-identity hash for the (upcoming) DAG/graph search.
+/// GraphHash — superko-safe node-identity hash for the DAG/graph search.
 ///
-/// Ported from KataGo's `cpp/game/graphhash.{h,cpp}` (see `docs/strategy/GRAPH_SEARCH_DESIGN.md`
-/// §2.1 for the full recipe and the reuse rationale). Two layers:
+/// Ported from KataGo's `cpp/game/graphhash.{h,cpp}` (see "Graph search" in
+/// `docs/design-notes.md` for how the search uses it). Two layers:
 ///
 /// - `stateHash` folds together everything relevant to *immediate* legality: the full
 ///   rules/komi/superko-aware position hash (`BoardHistory.getSituationRulesAndKoHash`), whether a

@@ -5,7 +5,7 @@ import XCTest
 /// Tests for `ringo makedata`'s pure (I/O-free) helpers. The full pipeline (SGF parsing,
 /// shard writing, optional teacher labeling) needs real fixtures/MLX and is exercised elsewhere
 /// (`TrainingDataFormatTests`, host-only teacher tests); this file covers O-4
-/// (CODEBASE_REVIEW_0711.md): `MakeDataCommand.highSkipRateWarning` is factored out specifically
+/// `MakeDataCommand.highSkipRateWarning` is factored out specifically
 /// so this threshold logic is testable without a corpus.
 final class MakeDataCommandTests: XCTestCase {
     func testNoWarningWhenSkipRateIsAtOrBelowThirtyPercent() {

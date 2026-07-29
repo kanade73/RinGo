@@ -19,7 +19,7 @@ import RinGoCore
 // the engine config, and `AnalysisLabeler` reprojects every field to side-to-move accordingly. See
 // `AnalysisLabeler.targets` for the exact per-field mapping and doc citations.
 
-// MARK: - Response schema (subset of the Analysis_Engine.md response object)
+// MARK: - Response schema (subset of KataGo's Analysis_Engine.md response object)
 
 /// One entry of the analysis response `moveInfos` array. Only the fields WP-14 consumes are decoded;
 /// unknown fields (pv, lcb, order, utility, ...) are ignored.

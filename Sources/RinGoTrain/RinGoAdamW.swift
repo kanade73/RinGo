@@ -4,7 +4,7 @@ import MLXNN
 import MLXOptimizers
 
 /// AdamW work-alike whose learning rate and bias-correction step counter are `MLXArray` entries in
-/// `innerState()`, not Swift `Float`s -- see MLX_TRAINING_AUDIT_0708.md P0-1.
+/// `innerState()`, not Swift `Float`s.
 ///
 /// ## Why this exists
 /// `Trainer`'s compiled training step traces the whole forward+backward+optimizer-update graph
@@ -129,7 +129,7 @@ public final class RinGoAdamW: Optimizer {
     /// (`TrainableNetwork`'s `bn-scale:`/`bn-bias:` key namespace) and bias vectors (`bias:` keys --
     /// this substring also matches inside `bn-bias:`, which should be excluded anyway, so a single
     /// check covers both). Standard AdamW hygiene: decay only the weight kernels (`conv:`,
-    /// `matmul:`), not biases or norm scale/shift. See MLX_TRAINING_AUDIT_0708.md P1-5.
+    /// `matmul:`), not biases or norm scale/shift.
     private static func isExcludedFromWeightDecay(_ key: String) -> Bool {
         key.contains("bias:") || key.contains("bn-scale:")
     }

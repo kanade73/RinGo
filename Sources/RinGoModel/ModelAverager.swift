@@ -8,7 +8,7 @@ public struct ModelAverageError: Error, CustomStringConvertible, Sendable {
     }
 }
 
-/// Stochastic Weight Averaging (SWA, BREAKTHROUGH_IDEAS E4) over RinGo training snapshots.
+/// Stochastic Weight Averaging (SWA) over RinGo training snapshots.
 ///
 /// `average` takes N same-architecture `ModelDesc`s (as produced by `TrainableNetwork.exportDesc`
 /// and written by `ModelWriter`) and returns a new descriptor whose every weight tensor is the

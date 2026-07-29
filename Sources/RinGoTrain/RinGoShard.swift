@@ -39,7 +39,7 @@ public struct RinGoSample: Sendable {
 
 /// A loaded RinGoData v2 shard (or the concatenation of several — see `RinGoDataset.load`).
 ///
-/// ## Resident representation (audit P1-2)
+/// ## Resident representation
 /// The ON-DISK format is unchanged: fp32 spatial planes. In RAM this type stores each field as a
 /// single contiguous per-shard buffer (struct-of-arrays), indexed by `sampleIndex * <field>Stride`
 /// (all samples share the same stride for a given `nnLen`, so no per-sample offset table is
@@ -426,7 +426,7 @@ public enum RinGoDataset {
     /// - Parameter excluding: files to skip even though they live in `directory` and match the
     ///   shard extensions. This exists so the held-out validation shard (`val.nngd`, see
     ///   `TrainCommand.loadValidationShard`) never leaks into the training set when it lives in
-    ///   the same directory as the training shards — the P0-1 leakage bug: without this, a
+    ///   the same directory as the training shards — the leakage bug this guards: without this, a
     ///   directory containing both training shards and `val.nngd` would train on validation data
     ///   too, silently invalidating the holdout. Paths are compared via `standardizedFileURL` so
     ///   callers don't need to worry about `..`/symlink formatting differences between how the

@@ -24,6 +24,11 @@ private enum RinGoCommand {
         do {
             let arguments = Array(CommandLine.arguments.dropFirst())
             switch arguments.first {
+            case "-h", "--help", "help":
+                // An explicit help request is a success, so it goes to stdout and exits 0;
+                // only a missing/unknown subcommand is an error (usage on stderr, exit 1).
+                print(usage)
+                return
             case "rawnn":
                 try runRawNN(parseRawNN(Array(arguments.dropFirst())))
             case "benchmark":

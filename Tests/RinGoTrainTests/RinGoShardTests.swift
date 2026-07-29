@@ -24,7 +24,7 @@ final class RinGoShardTests: XCTestCase {
         XCTAssertTrue(sample.ownershipValid)
     }
 
-    /// WP-2 (TRAINING_FIX_PLAN.md): RinGoData v2 is NOT backward compatible with v1. A v1 shard
+    /// RinGoData v2 is NOT backward compatible with v1. A v1 shard
     /// (one-hot policy index, no validity flags) must be rejected with a clear, actionable error --
     /// not silently misread as a truncated/malformed v2 shard.
     func testRejectsV1Shards() {
@@ -38,7 +38,7 @@ final class RinGoShardTests: XCTestCase {
         }
     }
 
-    /// Audit P1-2: the u8 spatial packing only holds if every 9x9 V7 plane is binary 0/1. A
+    /// The u8 spatial packing only holds if every 9x9 V7 plane is binary 0/1. A
     /// non-binary spatial value must fail loudly with the offending sample/position/plane -- NEVER
     /// be silently quantized. Spatial starts right after the 24-byte header; flat index 5 is written
     /// as 1.0 (little-endian bytes 00 00 80 3F). Clearing the 0x80 byte turns it into 0.5
@@ -82,9 +82,9 @@ final class RinGoShardTests: XCTestCase {
         XCTAssertLessThan(elapsed, 1.5, "Parsing took \(elapsed) seconds")
     }
 
-    // MARK: - P0-1: RinGoDataset.load(directory:excluding:) must not leak val.nngd into train
+    // MARK: - RinGoDataset.load(directory:excluding:) must not leak val.nngd into train
 
-    /// Regression for TRAINING_PROCESS_AUDIT.md P0-1: `TrainCommand` reads training shards and the
+    /// Holdout-integrity regression: `TrainCommand` reads training shards and the
     /// held-out `val.nngd` from the same directory (the exact layout `makedata -val-ratio`
     /// produces). Without an exclusion mechanism, `RinGoDataset.load(directory:)` reads every
     /// `.nngd` file it finds — including `val.nngd` — so the "held-out" validation samples end up

@@ -213,7 +213,7 @@ final class TeacherLabelerTests: XCTestCase {
         )
     }
 
-    // MARK: - Serial vs pipelined byte-identity (WP-4b, audit P1-1)
+    // MARK: - Serial vs pipelined byte-identity (WP-4b)
 
     /// A stateless, deterministic teacher whose output is a PURE function of the request's prefilled
     /// features, so the overlapped pipeline and the serial path receive identical per-position labels

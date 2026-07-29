@@ -278,8 +278,8 @@ final class TimeManagerTests: XCTestCase {
         )
     }
 
-    /// WP-24 (docs/reviews/CODEX_DEBATE_0712.md R1 finding #3): `Search.runSearch`'s deadline is only
-    /// checked between playout batches, so the root-bootstrap NN evaluation (the very first batch)
+    /// `Search.runSearch`'s deadline is only checked between playout batches, so the
+    /// root-bootstrap NN evaluation (the very first batch)
     /// always runs regardless of `timeBudget` — even a budget of exactly 0 still pays for one full
     /// evaluation. Under sudden death at (near-)zero remaining time this can burn the entire
     /// remainder and lose the game on time, so `genmove` must skip search entirely (zero evaluator

@@ -37,3 +37,13 @@ Copyright (c) 2023 ml-explore
 https://github.com/ml-explore/mlx-swift
 
 mlx-swift is a declared SwiftPM dependency, resolved at build time, and is not vendored in this repository.
+
+## swift-numerics
+
+swift-numerics is licensed under the Apache License 2.0 with the Runtime Library Exception.
+
+Copyright (c) 2019 Apple Inc. and the Swift Numerics project authors
+
+https://github.com/apple/swift-numerics
+
+swift-numerics is resolved transitively through mlx-swift (see `Package.resolved`), at build time, and is not vendored in this repository.
