@@ -37,8 +37,38 @@ jobs:
           key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
           restore-keys: spm-${{ runner.os }}-
 
+      # Pinned deliberately. `brew install` tracks the newest release, so a formatter
+      # release that changes a default rule turns every later run red on code nobody
+      # touched. Bump these four values together to adopt a new version.
       - name: Install lint tools
-        run: brew install swiftformat swiftlint
+        env:
+          SWIFTFORMAT_VERSION: 0.62.1
+          SWIFTFORMAT_SHA256: 7cb1cb1fae04932047c7015441c543848e8e60e1572d808d080e0a1f1661114a
+          SWIFTLINT_VERSION: 0.65.0
+          SWIFTLINT_SHA256: d6cb0aa7a2f5f1ef306fc9e37bcb54dc9a26facc8f7784ac0c3dd3eccf5c6ba6
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/lint-tools"
+          mkdir -p "$tools"
+          cd "$tools"
+
+          curl -fsSL -o swiftformat.zip \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/$SWIFTFORMAT_VERSION/swiftformat.zip"
+          echo "$SWIFTFORMAT_SHA256  swiftformat.zip" | shasum -a 256 -c -
+          unzip -qo swiftformat.zip
+
+          curl -fsSL -o portable_swiftlint.zip \
+            "https://github.com/realm/SwiftLint/releases/download/$SWIFTLINT_VERSION/portable_swiftlint.zip"
+          echo "$SWIFTLINT_SHA256  portable_swiftlint.zip" | shasum -a 256 -c -
+          unzip -qo portable_swiftlint.zip
+
+          chmod +x swiftformat swiftlint
+          echo "$tools" >> "$GITHUB_PATH"
+
+      - name: Report tool versions
+        run: |
+          swiftformat --version
+          swiftlint --version
 
       - name: Resolve dependencies
         run: make setup

@@ -2,3 +2,11 @@
 --indent 4
 --maxwidth 120
 --exclude .build
+
+# This codebase is a mechanical port of KataGo's C++ and is kept traceable to the
+# original statement by statement (.swiftlint.yml turns off the size lints for the
+# same reason). The port leans on single-line conditional bodies —
+# `if !isValPass { shardIndex += 1 }` — in roughly 470 places, mirroring the C++ it
+# came from. The rules below each want those split across three lines, which would
+# cost that correspondence for no behavioural gain.
+--disable wrapIfStatementBodies,wrapIfExpressionBodies,wrapMultilineStatementBraces
