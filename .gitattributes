@@ -1,0 +1,22 @@
+# Test data, not source. GitHub keeps these paths out of the repository's language
+# statistics and out of code search, and collapses them by default in pull-request
+# diffs, so review stays on the Swift that implements the engine. Nothing here
+# changes how git stores the files, and the test targets still load them normally.
+
+# Machine-generated reference outputs from the KataGo oracle. Regenerate the first
+# two with `make goldens`; the traces with
+# `KATAGO_GOLDEN_RECORD=1 swift test --filter GoldenTraceTests`.
+Tests/RinGoCoreTests/Goldens/*.json         linguist-generated=true
+Tests/RinGoModelTests/Fixtures/*.json       linguist-generated=true
+Tests/RinGoEngineTests/GoldenTraces/*.json  linguist-generated=true
+
+# Hand-authored board positions fed to the engine as inputs. Vendored rather than
+# generated: `make goldens` reads these to produce the goldens above, so they are
+# checked-in data, never a build product.
+Tests/RinGoCoreTests/Fixtures/*.sgf         linguist-vendored=true
+Tests/RinGoModelTests/Fixtures/*.sgf        linguist-vendored=true
+Scripts/openings-9x9/*.sgf                  linguist-vendored=true
+
+# Linguist detects SGF as a language, so an .sgf added outside the paths above
+# would otherwise reappear in the language bar on its own.
+*.sgf                                       linguist-detectable=false
