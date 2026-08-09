@@ -4,7 +4,8 @@ Background for the parts of this port whose *shape* is not obvious from the code
 evaluation is kept under control, which numerical conventions parity depends on, and what the
 optional DAG search does. Source comments point here rather than restating any of it.
 
-This file is part of the public repository; see `README.md` for build, usage, and verification.
+This file is part of the public repository; see `README.en.md` (or the Japanese `README.md`) for
+build, usage, and verification.
 
 ## MLX discipline (lazy evaluation)
 
