@@ -12,7 +12,7 @@ __pycache__/
 default.metallib
 *.air
 
-# Outputs of the training pipeline in README.md ("Training and evaluation").
+# Outputs of the training pipeline in README.en.md ("Training and evaluation").
 data/
 runs/
 *.nngd
